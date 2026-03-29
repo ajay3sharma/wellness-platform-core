@@ -1,0 +1,2 @@
+export { webAppMetadata } from "./metadata";
+

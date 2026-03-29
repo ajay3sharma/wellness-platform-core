@@ -1,0 +1,2 @@
+export { mobileAppMetadata } from "./metadata";
+

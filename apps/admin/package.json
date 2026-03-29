@@ -1,0 +1,19 @@
+{
+  "name": "@platform/admin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src --max-warnings=0",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@platform/ai": "workspace:*",
+    "@platform/brand": "workspace:*",
+    "@platform/config": "workspace:*",
+    "@platform/types": "workspace:*",
+    "@platform/ui": "workspace:*"
+  }
+}
+
