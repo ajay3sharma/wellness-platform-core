@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "lint": "eslint src --max-warnings=0",
+    "dev": "next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "lint": "eslint app components lib next.config.mjs --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -13,7 +15,13 @@
     "@platform/brand": "workspace:*",
     "@platform/config": "workspace:*",
     "@platform/types": "workspace:*",
-    "@platform/ui": "workspace:*"
+    "@platform/ui": "workspace:*",
+    "next": "^15.5.2",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6"
   }
 }
-

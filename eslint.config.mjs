@@ -9,12 +9,15 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ["**/*.ts"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
         ecmaVersion: "latest",
-        sourceType: "module"
+        sourceType: "module",
+        ecmaFeatures: {
+          jsx: true
+        }
       },
       globals: {
         ...globals.node
@@ -35,7 +38,7 @@ export default [
     }
   },
   {
-    files: ["**/*.mjs"],
+    files: ["**/*.{mjs,js,cjs}"],
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
@@ -45,4 +48,3 @@ export default [
     }
   }
 ];
-

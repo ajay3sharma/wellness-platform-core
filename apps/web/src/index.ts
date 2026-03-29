@@ -1,2 +1,1 @@
-export { webAppMetadata } from "./metadata";
-
+export { webAppMetadata } from "./lib/site";

@@ -2,17 +2,31 @@
   "name": "@platform/mobile",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
+  "main": "expo-router/entry",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "lint": "eslint src --max-warnings=0",
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint app src app.config.ts babel.config.cjs --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@platform/brand": "workspace:*",
     "@platform/config": "workspace:*",
+    "@platform/sdk": "workspace:*",
     "@platform/types": "workspace:*",
-    "@platform/ui": "workspace:*"
+    "@platform/ui": "workspace:*",
+    "expo": "~55.0.0",
+    "expo-router": "~55.0.5",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-native": "0.83.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.0",
+    "typescript": "^5.8.3"
   }
 }
-

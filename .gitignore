@@ -1,9 +1,15 @@
 node_modules/
 dist/
 .turbo/
+.next/
+.expo/
+.expo-shared/
+coverage/
+tmp/
+.cache/
+*.tsbuildinfo
 .DS_Store
 Thumbs.db
 .env
 .env.local
 .env.*.local
-coverage/

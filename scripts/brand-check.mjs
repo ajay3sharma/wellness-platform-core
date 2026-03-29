@@ -11,6 +11,15 @@ const allowedFiles = new Set([
 ]);
 const forbiddenTokens = ["MoveYOU", "Stretch. Strengthen. Renew."];
 const violations = [];
+const allowedExtensions = new Set([".ts", ".tsx", ".js", ".jsx"]);
+const ignoredDirectories = new Set([
+  "dist",
+  "node_modules",
+  ".next",
+  ".expo",
+  ".turbo",
+  "coverage"
+]);
 
 function walk(currentPath) {
   for (const entry of readdirSync(currentPath)) {
@@ -18,7 +27,7 @@ function walk(currentPath) {
     const stats = statSync(entryPath);
 
     if (stats.isDirectory()) {
-      if (entry === "dist" || entry === "node_modules") {
+      if (ignoredDirectories.has(entry)) {
         continue;
       }
 
@@ -26,7 +35,7 @@ function walk(currentPath) {
       continue;
     }
 
-    if (!entryPath.endsWith(".ts")) {
+    if (!allowedExtensions.has(path.extname(entryPath))) {
       continue;
     }
 
@@ -57,4 +66,3 @@ if (violations.length > 0) {
 }
 
 console.log("Brand hardcode check passed.");
-

@@ -31,6 +31,28 @@ export const moveyouBrand = {
     seoDescription: "Stretch. Strengthen. Renew.",
     legalName: "MoveYOU Wellness Platform"
   },
+  appMetadata: {
+    web: {
+      headline: "A calm home for strength, recovery, and progress.",
+      subheadline: "Train with intention across workouts, wellness, and guided recovery.",
+      description: "Consumer web surface for discovery, account access, commerce, and light wellness exploration."
+    },
+    admin: {
+      headline: "Operate programs, coaches, and commerce from one control room.",
+      subheadline: "Manage users, content, orders, and AI-assisted drafts with clear ownership.",
+      description: "Operational surface for admins and coaches."
+    },
+    mobile: {
+      headline: "Your daily training and reset rituals in one pocket studio.",
+      subheadline: "Move through workouts, relaxation, and progress tracking on the go.",
+      description: "Primary mobile experience for end users."
+    },
+    api: {
+      headline: "Platform backbone for auth, content, billing, and AI policy.",
+      subheadline: "Stable contracts for every app surface and shared package.",
+      description: "Backend service boundary for the wellness platform."
+    }
+  },
   billing: {
     defaultMarket: "india",
     providers: {
@@ -57,4 +79,3 @@ export const moveyouBrand = {
     }
   }
 } satisfies BrandPack;
-

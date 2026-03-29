@@ -1,7 +1,62 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "allowJs": false,
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "es2022"
+    ],
+    "noEmit": true,
+    "types": [
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ],
+      "@platform/ai": [
+        "../../packages/ai/src/index.ts"
+      ],
+      "@platform/billing": [
+        "../../packages/billing/src/index.ts"
+      ],
+      "@platform/brand": [
+        "../../packages/brand/src/index.ts"
+      ],
+      "@platform/config": [
+        "../../packages/config/src/index.ts"
+      ],
+      "@platform/sdk": [
+        "../../packages/sdk/src/index.ts"
+      ],
+      "@platform/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@platform/ui": [
+        "../../packages/ui/src/index.ts"
+      ]
+    },
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx",
+    "lib/**/*.ts",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -21,9 +21,9 @@
       "@platform/billing": ["packages/billing/src/index.ts"],
       "@platform/brand": ["packages/brand/src/index.ts"],
       "@platform/config": ["packages/config/src/index.ts"],
+      "@platform/sdk": ["packages/sdk/src/index.ts"],
       "@platform/types": ["packages/types/src/index.ts"],
       "@platform/ui": ["packages/ui/src/index.ts"]
     }
   }
 }
-

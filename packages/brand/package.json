@@ -3,16 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/brand/src/index.js",
+  "types": "./dist/brand/src/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/brand/src/index.d.ts",
+      "default": "./dist/brand/src/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node ../../scripts/fix-esm-specifiers.mjs dist/brand/src",
     "lint": "eslint src --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -20,4 +20,3 @@
     "@platform/types": "workspace:*"
   }
 }
-

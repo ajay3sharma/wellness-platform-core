@@ -1,4 +1,4 @@
-import type { BrandKey, BrandPack } from "@platform/types";
+import type { AppMetadataSnapshot, AppSurface, BrandKey, BrandPack } from "@platform/types";
 import { moveyouBrand } from "./brands/moveyou";
 
 export const brandRegistry = {
@@ -13,3 +13,19 @@ export function getBrandPack(requestedBrand = process.env.PLATFORM_BRAND): Brand
   return brandRegistry.moveyou;
 }
 
+export function getBrandMetadata(
+  surface: AppSurface,
+  requestedBrand = process.env.PLATFORM_BRAND
+): AppMetadataSnapshot {
+  const brand = getBrandPack(requestedBrand);
+  const surfaceMetadata = brand.appMetadata[surface];
+
+  return {
+    surface,
+    appName: brand.productName,
+    headline: surfaceMetadata.headline,
+    subheadline: surfaceMetadata.subheadline,
+    description: surfaceMetadata.description,
+    supportEmail: brand.supportEmail
+  };
+}

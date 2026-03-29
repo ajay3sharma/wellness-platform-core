@@ -1,2 +1,0 @@
-export { adminAppMetadata } from "./metadata";
-

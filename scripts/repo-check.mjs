@@ -14,6 +14,8 @@ const requiredPaths = [
   "packages/config",
   "packages/billing",
   "packages/ai",
+  "packages/sdk",
+  ".codex/skills/platform-project/SKILL.md",
   ".github/workflows/ci.yml"
 ];
 

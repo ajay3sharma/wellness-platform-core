@@ -1,16 +1,7 @@
-import { getBrandPack } from "@platform/brand";
-import { platformConfig } from "@platform/config";
-import { createClayThemeSnapshot } from "@platform/ui";
+import { getBrandMetadata, getBrandPack } from "@platform/brand";
+import { createSurfaceTheme } from "@platform/ui";
 
-const brand = getBrandPack();
-
-export const mobileAppMetadata = {
-  appName: brand.productName,
-  shortName: brand.shortName,
-  tagline: brand.tagline,
-  scheme: brand.domains.mobileDeepLink,
-  supportEmail: brand.supportEmail,
-  theme: createClayThemeSnapshot(brand),
-  aiPolicy: platformConfig.ai
-};
+export const mobileBrand = getBrandPack();
+export const mobileMetadata = getBrandMetadata("mobile");
+export const mobileTheme = createSurfaceTheme(mobileBrand, "mobile");
 

@@ -1,0 +1,3 @@
+display_name: Platform Project
+short_description: Lean repo guide for the wellness-platform-core monorepo.
+default_prompt: Use this skill when implementing or refactoring code in wellness-platform-core so the work stays aligned with brand, billing, AI, auth, and package ownership rules.
