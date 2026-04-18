@@ -8,6 +8,7 @@ export interface ApiConfig {
   version: string;
   brand: BrandPack;
   apiMetadata: AppMetadataSnapshot;
+  allowedOrigins: string[];
   auth: {
     issuer: string;
     audience: string;
@@ -16,9 +17,10 @@ export interface ApiConfig {
     accessSecret: string;
     refreshSecret: string;
   };
-  devAuth: {
+  bootstrapAdmin: {
     email: string;
     password: string;
+    displayName: string;
   };
   health: {
     service: string;
@@ -40,6 +42,7 @@ export const apiConfig: ApiConfig = {
   version: "0.1.0",
   brand: activeBrand,
   apiMetadata: getBrandMetadata("api", runtimeEnv.activeBrand),
+  allowedOrigins: [runtimeEnv.webUrl, runtimeEnv.adminUrl],
   auth: {
     issuer: platformConfig.auth.issuer,
     audience: platformConfig.auth.audience,
@@ -48,9 +51,10 @@ export const apiConfig: ApiConfig = {
     accessSecret: runtimeEnv.jwtAccessSecret,
     refreshSecret: runtimeEnv.jwtRefreshSecret
   },
-  devAuth: {
-    email: getStringEnv("API_DEV_EMAIL", activeBrand.supportEmail),
-    password: getStringEnv("API_DEV_PASSWORD", "dev-password")
+  bootstrapAdmin: {
+    email: getStringEnv("API_BOOTSTRAP_ADMIN_EMAIL", activeBrand.supportEmail),
+    password: getStringEnv("API_BOOTSTRAP_ADMIN_PASSWORD", "dev-password"),
+    displayName: getStringEnv("API_BOOTSTRAP_ADMIN_NAME", `${activeBrand.productName} Admin`)
   },
   health: {
     service: "api",

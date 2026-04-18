@@ -1,12 +1,88 @@
+"use client";
+
+import { createApiClient } from "@platform/sdk";
 import { getAdminAiQuotaPolicy } from "@platform/ai";
-import { adminBrand, adminMetadata, adminBasePath } from "../../../lib/brand";
-import { getDemoUser } from "../../../lib/session";
+import { useEffect, useMemo, useState } from "react";
 import { SectionCard } from "../../../components/section-card";
 import { StatCard } from "../../../components/stat-card";
+import { adminBrand, adminMetadata, adminBasePath } from "../../../lib/brand";
+import { useAdminSession } from "../../../lib/session";
+
+interface DashboardSnapshot {
+  primaryCount: string;
+  primaryLabel: string;
+  primaryDetail: string;
+  secondaryCount: string;
+  secondaryLabel: string;
+  secondaryDetail: string;
+}
 
 export default function DashboardPage() {
-  const user = getDemoUser();
+  const { session } = useAdminSession();
   const quota = getAdminAiQuotaPolicy(adminBrand);
+  const api = useMemo(
+    () =>
+      createApiClient({
+        getAccessToken: () => session?.tokens.accessToken
+      }),
+    [session]
+  );
+  const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        setError(null);
+
+        if (session.user.role === "admin") {
+          const [users, workouts] = await Promise.all([api.adminUsers.list(), api.adminWorkouts.list()]);
+          const pendingApprovals = users.filter((user) => user.status === "pending_approval").length;
+          const activeCoaches = users.filter(
+            (user) => user.role === "coach" && user.status === "active"
+          ).length;
+          const publishedWorkouts = workouts.filter((workout) => workout.status === "published").length;
+          const draftWorkouts = workouts.filter((workout) => workout.status === "draft").length;
+
+          setSnapshot({
+            primaryCount: `${pendingApprovals}`,
+            primaryLabel: "Pending approvals",
+            primaryDetail: "Coach and admin access requests waiting for approval.",
+            secondaryCount: `${publishedWorkouts}`,
+            secondaryLabel: "Published workouts",
+            secondaryDetail: `${draftWorkouts} drafts and ${activeCoaches} active coaches in the workspace.`
+          });
+          return;
+        }
+
+        const coachUsers = await api.coachUsers.list();
+        const assignedWorkouts = coachUsers.reduce(
+          (total, user) => total + user.assignedWorkouts.length,
+          0
+        );
+        const notedUsers = coachUsers.filter((user) => user.latestCoachNote).length;
+
+        setSnapshot({
+          primaryCount: `${coachUsers.length}`,
+          primaryLabel: "Assigned users",
+          primaryDetail: "People currently linked to this coach workspace.",
+          secondaryCount: `${assignedWorkouts}`,
+          secondaryLabel: "Assigned workouts",
+          secondaryDetail: `${notedUsers} users already have a saved coach note.`
+        });
+      } catch (unknownError) {
+        setError((unknownError as { message?: string }).message ?? "Unable to load dashboard.");
+      }
+    })();
+  }, [api, session]);
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <div className="stack">
@@ -17,15 +93,16 @@ export default function DashboardPage() {
           <p className="display-copy">{adminMetadata.description}</p>
           <div className="pill-row">
             <span className="pill">
-              <strong>Signed in</strong> {user.displayName}
+              <strong>Signed in</strong> {session.user.displayName}
+            </span>
+            <span className="pill">
+              <strong>Role</strong> {session.user.role}
             </span>
             <span className="pill">
               <strong>Base path</strong> {adminBasePath}
             </span>
-            <span className="pill">
-              <strong>AI policy</strong> free tier only
-            </span>
           </div>
+          {error ? <p className="error-banner">{error}</p> : null}
         </div>
 
         <div className="stack">
@@ -35,9 +112,14 @@ export default function DashboardPage() {
             detail={`Brand cap ${quota.maxBrandActionsPerDay}/day, with graceful disable on quota exhaustion.`}
           />
           <StatCard
-            label="Access"
-            value={user.role.toUpperCase()}
-            detail={`Role-aware shell currently rendering the ${user.role} experience.`}
+            label={snapshot?.primaryLabel ?? "Loading"}
+            value={snapshot?.primaryCount ?? "..."}
+            detail={snapshot?.primaryDetail ?? "Loading current workspace metrics."}
+          />
+          <StatCard
+            label={snapshot?.secondaryLabel ?? "Loading"}
+            value={snapshot?.secondaryCount ?? "..."}
+            detail={snapshot?.secondaryDetail ?? "Resolving workout and coaching totals."}
           />
         </div>
       </section>
@@ -45,26 +127,42 @@ export default function DashboardPage() {
       <section className="section-grid cols-3">
         <SectionCard
           title="Programs"
-          description="Shortcuts for workouts, progress, and scheduled assignments."
+          description="Phase 1 centers on published workouts, session history, and coach assignments."
         >
           <div className="stack-tight">
-            <div className="pill">Workout authoring queue</div>
-            <div className="pill">Relaxation publishing backlog</div>
-            <div className="pill">Coach assignments review</div>
+            <div className="pill">Persisted auth and protected routes</div>
+            <div className="pill">Workout publish flow</div>
+            <div className="pill">Coach assignment workspace</div>
           </div>
         </SectionCard>
-        <SectionCard title="Commerce" description="Placeholder entry points for catalog and order operations.">
+        <SectionCard
+          title={session.user.role === "admin" ? "Admin focus" : "Coach focus"}
+          description={
+            session.user.role === "admin"
+              ? "Approve privileged access, assign coaches, and manage the workout catalog."
+              : "Review assigned users, assign workouts, and maintain coaching notes."
+          }
+        >
           <div className="stack-tight">
-            <div className="pill">Product catalog sync</div>
-            <div className="pill">Orders awaiting review</div>
-            <div className="pill">Inventory health</div>
+            <div className="pill">
+              {session.user.role === "admin" ? "Pending access queue" : "Assigned user review"}
+            </div>
+            <div className="pill">
+              {session.user.role === "admin" ? "Coach mapping" : "Workout assignment"}
+            </div>
+            <div className="pill">
+              {session.user.role === "admin" ? "Workout publishing" : "Session history"}
+            </div>
           </div>
         </SectionCard>
-        <SectionCard title="Operations" description="Admin actions that stay visible during scaffold mode.">
+        <SectionCard
+          title="Out of scope"
+          description="Commerce, AI generation, wellness media, and web parity stay outside Phase 1."
+        >
           <div className="stack-tight">
-            <div className="pill">Invite coaches</div>
-            <div className="pill">Check audit trail</div>
-            <div className="pill">Review AI draft usage</div>
+            <div className="pill">No commerce flows yet</div>
+            <div className="pill">No wellness content management</div>
+            <div className="pill">No AI tooling in Phase 1</div>
           </div>
         </SectionCard>
       </section>

@@ -7,6 +7,7 @@ export type AppSurface = "web" | "admin" | "mobile" | "api";
 export type WorkoutDifficulty = "beginner" | "intermediate" | "advanced";
 export type WorkoutStatus = "draft" | "published";
 export type WorkoutSessionStatus = "in_progress" | "completed";
+export type AccountStatus = "active" | "pending_approval";
 export type AiAvailabilityStatus =
   | "available"
   | "quota_exceeded"
@@ -145,6 +146,11 @@ export interface CurrentUser {
   coachId: string | null;
 }
 
+export interface AccountProfile extends CurrentUser {
+  status: AccountStatus;
+  requestedRole: Role | null;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -160,6 +166,19 @@ export interface AuthSession {
 export interface LoginRequest {
   email: string;
   password: string;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  displayName: string;
+  role: Role;
+}
+
+export interface RegisterResult {
+  account: AccountProfile;
+  session: AuthSession | null;
+  message: string;
 }
 
 export interface RefreshSessionRequest {
@@ -178,6 +197,14 @@ export interface ApiError {
   details?: Record<string, unknown>;
 }
 
+export interface PendingApprovalError extends ApiError {
+  code: "ACCOUNT_PENDING_APPROVAL";
+  status: 403;
+  details?: ApiError["details"] & {
+    requestedRole?: Role;
+  };
+}
+
 export interface ServiceHealth {
   service: string;
   status: "ok" | "degraded";
@@ -194,6 +221,18 @@ export interface AppMetadataSnapshot {
   subheadline: string;
   description: string;
   supportEmail: string;
+}
+
+export interface WorkoutAssignmentRecord {
+  id: string;
+  workoutId: string;
+  workoutTitle: string;
+  userId: string;
+  coachId: string;
+  coachDisplayName: string;
+  note: string | null;
+  assignedAt: string;
+  updatedAt: string;
 }
 
 export interface WorkoutExerciseRecord {
@@ -219,6 +258,7 @@ export interface WorkoutListItem {
   exerciseCount: number;
   publishedAt: string | null;
   updatedAt: string;
+  assignment: WorkoutAssignmentRecord | null;
 }
 
 export interface WorkoutDetail extends WorkoutListItem {
@@ -302,4 +342,57 @@ export interface CompleteWorkoutSessionRequest {
     completed?: boolean;
     notes?: string | null;
   }>;
+}
+
+export interface UserDirectoryRecord {
+  id: string;
+  email: string;
+  displayName: string;
+  role: Role;
+  status: AccountStatus;
+  requestedRole: Role | null;
+  coachId: string | null;
+  coachDisplayName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AssignCoachRequest {
+  coachId: string;
+}
+
+export interface CoachNoteRecord {
+  id: string;
+  userId: string;
+  coachId: string;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveCoachNoteRequest {
+  note: string;
+}
+
+export interface CoachUserRecord {
+  id: string;
+  email: string;
+  displayName: string;
+  coachAssignmentId: string;
+  assignedAt: string;
+  assignedWorkouts: WorkoutAssignmentRecord[];
+  latestCoachNote: CoachNoteRecord | null;
+  lastCompletedSessionAt: string | null;
+}
+
+export interface AssignWorkoutRequest {
+  workoutId: string;
+  note?: string | null;
+}
+
+export interface CoachUserHistory {
+  user: UserDirectoryRecord;
+  assignments: WorkoutAssignmentRecord[];
+  note: CoachNoteRecord | null;
+  sessions: WorkoutSessionSummary[];
 }

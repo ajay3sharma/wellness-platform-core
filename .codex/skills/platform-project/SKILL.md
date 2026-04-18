@@ -5,7 +5,7 @@ description: Use when working in the wellness-platform-core repository. This is 
 
 # Platform Project
 
-Use this skill for implementation work in this repo. Treat it as the stable project memory file for future Codex chats.
+Use this skill for implementation work in this repo. Treat it as the stable project memory file for future Codex chats, and use `plan.md` as the canonical execution roadmap.
 
 ## Core Product Rules
 
@@ -74,6 +74,14 @@ Follow this sequence unless the user changes it:
 5. AI + quota layer
 6. Hardening and release prep
 
+The detailed breakdown, dependency gates, and milestone acceptance criteria live in `plan.md`.
+
+## Current Phase Status
+
+- Phase 0: complete
+- Phase 1: complete in the current local baseline
+- Phase 2: next
+
 ## Contract Freeze Rules
 
 Before large feature work, lock these shared contracts:
@@ -88,29 +96,25 @@ Before large feature work, lock these shared contracts:
 
 This is the main dependency gate before major parallel implementation.
 
-## First Real Build Slice
+## Phase 1 Baseline
 
-The first real product milestone is `auth + fitness`, not commerce or AI.
-
-Build in this order:
+The first real product milestone is implemented and includes more than the earliest slim slice:
 
 1. persisted auth with Prisma + Postgres
-2. admin login + workout CRUD + publish/unpublish
-3. mobile login + workout browse/detail/start/complete/history
-4. protected API routes for auth, workouts, and workout sessions
+2. public signup for users plus approval-gated coach and admin requests
+3. admin login + workout CRUD + publish/unpublish
+4. mobile login + workout browse/detail/start/complete/history
+5. protected API routes for auth, workouts, workout sessions, admin user operations, and coach workspace operations
+6. coach workspace for assigned users, workout assignment, history review, and coach notes
 
-Keep `apps/web` mostly scaffold-only during this slice unless a shared contract requires a small change.
+`apps/web` remains mostly scaffold-only at this stage.
 
-### Early Slice Out Of Scope
-
-Do not pull these into the first auth + fitness slice unless the user explicitly changes scope:
+### Still Out Of Scope After Phase 1
 
 - commerce checkout
 - subscriptions
 - AI generation
 - AI recommendations
-- coach assignment logic
-- progress analytics beyond basic workout history
 - relaxation and music
 - full web parity with mobile
 
@@ -202,6 +206,7 @@ Do not pull these into the first auth + fitness slice unless the user explicitly
 
 ## Read Before Large Changes
 
+- `plan.md`
 - `README.md`
 - `docs/architecture.md`
 

@@ -47,6 +47,9 @@ importers:
       '@platform/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@platform/sdk':
+        specifier: workspace:*
+        version: link:../../packages/sdk
       '@platform/types':
         specifier: workspace:*
         version: link:../../packages/types

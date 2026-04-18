@@ -13,7 +13,7 @@ async function bootstrap() {
 
   app.setGlobalPrefix(apiConfig.basePath.replace(/^\//, ""));
   app.enableCors({
-    origin: [apiConfig.brand.domains.web, apiConfig.brand.domains.admin],
+    origin: apiConfig.allowedOrigins,
     credentials: true
   });
   app.useGlobalPipes(

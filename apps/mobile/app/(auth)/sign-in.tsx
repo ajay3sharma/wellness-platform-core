@@ -1,18 +1,31 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import type { ApiError } from "@platform/types";
 import { ActionButton, Screen, TextField } from "../../src/components/ui";
 import { mobileMetadata, mobileTheme } from "../../src/metadata";
 import { useSession } from "../../src/session";
 
 export default function SignInScreen() {
-  const [email, setEmail] = useState("ajay@example.com");
-  const [password, setPassword] = useState("password");
+  const [email, setEmail] = useState("member@example.com");
+  const [password, setPassword] = useState("dev-password");
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const { signIn } = useSession();
 
   async function handleSignIn() {
-    await signIn({ email, password });
-    router.replace("/(tabs)");
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      await signIn({ email, password });
+      router.replace("/(tabs)");
+    } catch (unknownError) {
+      const apiError = unknownError as ApiError;
+      setError(apiError.message || "Unable to sign in right now.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -44,17 +57,37 @@ export default function SignInScreen() {
               {mobileMetadata.appName}
             </Text>
             <Text style={{ color: "#FFFFFF", fontSize: 30, lineHeight: 36, fontWeight: "700", maxWidth: 260 }}>
-              Reset. Move. Recover.
+              Sign in to continue your workout plan.
             </Text>
             <Text style={{ color: "rgba(255,255,255,0.78)", lineHeight: 20 }}>
-              Sign in to continue to your workouts, resets, progress, and store.
+              Use your Phase 1 account to access workouts, assigned sessions, and history.
             </Text>
 
             <View style={{ gap: 12, marginTop: 8 }}>
-              <TextField value={email} onChangeText={setEmail} placeholder="Email address" autoCapitalize="none" keyboardType="email-address" />
-              <TextField value={password} onChangeText={setPassword} placeholder="Password" secureTextEntry />
-              <ActionButton label={`Enter ${mobileMetadata.appName}`} onPress={handleSignIn} />
-              <ActionButton label="Use demo session" variant="secondary" onPress={handleSignIn} />
+              <TextField
+                autoCapitalize="none"
+                keyboardType="email-address"
+                onChangeText={setEmail}
+                placeholder="Email address"
+                value={email}
+              />
+              <TextField
+                onChangeText={setPassword}
+                placeholder="Password"
+                secureTextEntry
+                value={password}
+              />
+              {error ? (
+                <Text style={{ color: "#FFD4D4", lineHeight: 20 }}>
+                  {error}
+                </Text>
+              ) : null}
+              <ActionButton disabled={submitting} label={submitting ? "Signing in..." : `Enter ${mobileMetadata.appName}`} onPress={() => void handleSignIn()} />
+              <ActionButton
+                label="Create account"
+                onPress={() => router.push("/sign-up" as never)}
+                variant="secondary"
+              />
             </View>
           </View>
         </ScrollView>

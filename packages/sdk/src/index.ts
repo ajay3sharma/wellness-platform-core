@@ -1,16 +1,24 @@
 import { platformConfig } from "@platform/config";
 import type {
   ApiError,
+  AssignCoachRequest,
+  AssignWorkoutRequest,
   AuthSession,
+  CoachUserHistory,
+  CoachUserRecord,
   CompleteWorkoutSessionRequest,
+  CurrentUser,
   LoginRequest,
   LogoutRequest,
-  SaveWorkoutRequest,
+  RegisterRequest,
+  RegisterResult,
   RefreshSessionRequest,
+  SaveCoachNoteRequest,
+  SaveWorkoutRequest,
+  ServiceHealth,
   StartWorkoutSessionRequest,
-  ServiceHealth
-  ,
   UpdateWorkoutSessionRequest,
+  UserDirectoryRecord,
   WorkoutDetail,
   WorkoutListItem,
   WorkoutSessionRecord,
@@ -26,16 +34,18 @@ export interface ApiClientOptions {
 export interface ApiClient {
   health: () => Promise<ServiceHealth>;
   auth: {
+    register: (payload: RegisterRequest) => Promise<RegisterResult>;
     login: (payload: LoginRequest) => Promise<AuthSession>;
     refresh: (payload: RefreshSessionRequest) => Promise<AuthSession>;
     logout: (payload: LogoutRequest) => Promise<void>;
-    me: () => Promise<AuthSession["user"]>;
+    me: () => Promise<CurrentUser>;
   };
   workouts: {
     list: () => Promise<WorkoutListItem[]>;
     detail: (workoutId: string) => Promise<WorkoutDetail>;
   };
   adminWorkouts: {
+    list: () => Promise<WorkoutListItem[]>;
     create: (payload: SaveWorkoutRequest) => Promise<WorkoutDetail>;
     update: (workoutId: string, payload: SaveWorkoutRequest) => Promise<WorkoutDetail>;
     publish: (workoutId: string) => Promise<WorkoutDetail>;
@@ -43,6 +53,7 @@ export interface ApiClient {
   };
   workoutSessions: {
     listMine: () => Promise<WorkoutSessionSummary[]>;
+    detail: (sessionId: string) => Promise<WorkoutSessionRecord>;
     start: (payload: StartWorkoutSessionRequest) => Promise<WorkoutSessionRecord>;
     update: (
       sessionId: string,
@@ -53,6 +64,17 @@ export interface ApiClient {
       payload: CompleteWorkoutSessionRequest
     ) => Promise<WorkoutSessionRecord>;
   };
+  adminUsers: {
+    list: () => Promise<UserDirectoryRecord[]>;
+    approveRole: (userId: string) => Promise<UserDirectoryRecord>;
+    assignCoach: (userId: string, payload: AssignCoachRequest) => Promise<UserDirectoryRecord>;
+  };
+  coachUsers: {
+    list: () => Promise<CoachUserRecord[]>;
+    assignWorkout: (userId: string, payload: AssignWorkoutRequest) => Promise<void>;
+    history: (userId: string) => Promise<CoachUserHistory>;
+    saveNote: (userId: string, payload: SaveCoachNoteRequest) => Promise<CoachUserHistory>;
+  };
 }
 
 async function request<TResponse>(
@@ -61,7 +83,10 @@ async function request<TResponse>(
   options: Required<ApiClientOptions>
 ): Promise<TResponse> {
   const headers = new globalThis.Headers(init.headers);
-  headers.set("content-type", "application/json");
+
+  if (init.body && !headers.has("content-type")) {
+    headers.set("content-type", "application/json");
+  }
 
   const accessToken = options.getAccessToken();
   if (accessToken) {
@@ -100,6 +125,15 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
   return {
     health: () => request<ServiceHealth>("/health", { method: "GET" }, resolvedOptions),
     auth: {
+      register: (payload) =>
+        request<RegisterResult>(
+          "/auth/register",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
       login: (payload) =>
         request<AuthSession>(
           "/auth/login",
@@ -127,7 +161,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
           },
           resolvedOptions
         ),
-      me: () => request<AuthSession["user"]>("/auth/me", { method: "GET" }, resolvedOptions)
+      me: () => request<CurrentUser>("/auth/me", { method: "GET" }, resolvedOptions)
     },
     workouts: {
       list: () => request<WorkoutListItem[]>("/workouts", { method: "GET" }, resolvedOptions),
@@ -135,6 +169,7 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
         request<WorkoutDetail>(`/workouts/${workoutId}`, { method: "GET" }, resolvedOptions)
     },
     adminWorkouts: {
+      list: () => request<WorkoutListItem[]>("/admin/workouts", { method: "GET" }, resolvedOptions),
       create: (payload) =>
         request<WorkoutDetail>(
           "/admin/workouts",
@@ -173,6 +208,14 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
     workoutSessions: {
       listMine: () =>
         request<WorkoutSessionSummary[]>("/workout-sessions/me", { method: "GET" }, resolvedOptions),
+      detail: (sessionId) =>
+        request<WorkoutSessionRecord>(
+          `/workout-sessions/${sessionId}`,
+          {
+            method: "GET"
+          },
+          resolvedOptions
+        ),
       start: (payload) =>
         request<WorkoutSessionRecord>(
           "/workout-sessions",
@@ -194,6 +237,55 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
       complete: (sessionId, payload) =>
         request<WorkoutSessionRecord>(
           `/workout-sessions/${sessionId}/complete`,
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        )
+    },
+    adminUsers: {
+      list: () => request<UserDirectoryRecord[]>("/admin/users", { method: "GET" }, resolvedOptions),
+      approveRole: (userId) =>
+        request<UserDirectoryRecord>(
+          `/admin/users/${userId}/approve-role`,
+          {
+            method: "POST"
+          },
+          resolvedOptions
+        ),
+      assignCoach: (userId, payload) =>
+        request<UserDirectoryRecord>(
+          `/admin/users/${userId}/assign-coach`,
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        )
+    },
+    coachUsers: {
+      list: () => request<CoachUserRecord[]>("/coach/users", { method: "GET" }, resolvedOptions),
+      assignWorkout: (userId, payload) =>
+        request<void>(
+          `/coach/users/${userId}/assign-workout`,
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      history: (userId) =>
+        request<CoachUserHistory>(
+          `/coach/users/${userId}/workout-history`,
+          {
+            method: "GET"
+          },
+          resolvedOptions
+        ),
+      saveNote: (userId, payload) =>
+        request<CoachUserHistory>(
+          `/coach/users/${userId}/notes`,
           {
             method: "POST",
             body: JSON.stringify(payload)

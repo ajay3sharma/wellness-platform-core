@@ -14,6 +14,7 @@
     "@platform/ai": "workspace:*",
     "@platform/brand": "workspace:*",
     "@platform/config": "workspace:*",
+    "@platform/sdk": "workspace:*",
     "@platform/types": "workspace:*",
     "@platform/ui": "workspace:*",
     "next": "^15.5.2",

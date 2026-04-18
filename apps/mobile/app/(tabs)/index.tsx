@@ -1,29 +1,56 @@
+import { router } from "expo-router";
+import { useEffect, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
-import { featuredWorkouts, dashboardMetrics } from "../../src/content";
+import { createApiClient } from "@platform/sdk";
+import type { WorkoutListItem, WorkoutSessionSummary } from "@platform/types";
 import { AccentBanner, ContentCard } from "../../src/components/cards";
 import { ActionButton, MetricCard, Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { mobileMetadata } from "../../src/metadata";
-import { router } from "expo-router";
+import { useSession } from "../../src/session";
 
 export default function DashboardScreen() {
+  const { session } = useSession();
+  const api = useMemo(
+    () =>
+      createApiClient({
+        getAccessToken: () => session?.tokens.accessToken
+      }),
+    [session]
+  );
+  const [workouts, setWorkouts] = useState<WorkoutListItem[]>([]);
+  const [history, setHistory] = useState<WorkoutSessionSummary[]>([]);
+
+  useEffect(() => {
+    if (!session) {
+      return;
+    }
+
+    void Promise.all([api.workouts.list(), api.workoutSessions.listMine()])
+      .then(([nextWorkouts, nextHistory]) => {
+        setWorkouts(nextWorkouts);
+        setHistory(nextHistory);
+      })
+      .catch(() => undefined);
+  }, [api, session]);
+
+  const assignedCount = workouts.filter((workout) => workout.assignment).length;
+  const completedCount = history.filter((item) => item.status === "completed").length;
+
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
-        <AccentBanner
-          title={mobileMetadata.headline}
-          subtitle={mobileMetadata.subheadline}
-        />
+        <AccentBanner title={mobileMetadata.headline} subtitle={mobileMetadata.subheadline} />
 
         <Surface>
           <SectionTitle
             eyebrow="Today"
-            title="A clean daily rhythm"
-            subtitle="Start with movement, add a reset, and keep the streak alive."
+            title="Your live Phase 1 dashboard"
+            subtitle="Published workouts, assigned sessions, and recent completion history."
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {dashboardMetrics.map((metric) => (
-              <MetricCard key={metric.label} {...metric} />
-            ))}
+            <MetricCard label="Published workouts" value={String(workouts.length)} hint="Current catalog count" />
+            <MetricCard label="Assigned" value={String(assignedCount)} hint="Coach-assigned workouts" />
+            <MetricCard label="Completed" value={String(completedCount)} hint="Finished workout sessions" />
           </View>
         </Surface>
 
@@ -32,23 +59,27 @@ export default function DashboardScreen() {
             <ActionButton label="Start workout" onPress={() => router.push("/(tabs)/workouts")} />
           </View>
           <View style={{ flex: 1 }}>
-            <ActionButton label="Reset now" variant="secondary" onPress={() => router.push("/(tabs)/reset")} />
+            <ActionButton
+              label="View history"
+              variant="secondary"
+              onPress={() => router.push("/(tabs)/progress")}
+            />
           </View>
         </View>
 
         <Surface>
           <SectionTitle
-            eyebrow="Featured"
+            eyebrow="Available now"
             title="Pick your next session"
-            subtitle="These are scaffolded placeholders for the later workout engine."
+            subtitle="Open a workout to see details and start a live session."
           />
           <View style={{ gap: 12 }}>
-            {featuredWorkouts.map((workout) => (
+            {workouts.slice(0, 3).map((workout) => (
               <ContentCard
-                key={workout.title}
+                key={workout.id}
                 title={workout.title}
-                meta={`${workout.duration} • ${workout.difficulty}`}
-                description={workout.focus}
+                meta={`${workout.durationMinutes} min • ${workout.difficulty}`}
+                description={workout.assignment ? `Assigned by ${workout.assignment.coachDisplayName}` : workout.description}
               />
             ))}
           </View>

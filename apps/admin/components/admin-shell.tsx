@@ -1,15 +1,47 @@
+"use client";
+
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, type ReactNode } from "react";
 import { adminBrand, adminMetadata, adminTheme } from "../lib/brand";
-import { getDemoUser } from "../lib/session";
 import { getVisibleNavigation } from "../lib/navigation";
+import { useAdminSession } from "../lib/session";
 
 interface AdminShellProps {
   children: ReactNode;
 }
 
 export function AdminShell({ children }: AdminShellProps) {
-  const user = getDemoUser();
+  const { session, status, signOut } = useAdminSession();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (status === "signed-out") {
+      router.replace("/login");
+      return;
+    }
+
+    if (status === "signed-in" && session && !["admin", "coach"].includes(session.user.role)) {
+      void signOut().then(() => router.replace("/login"));
+    }
+  }, [router, session, signOut, status]);
+
+  if (status !== "signed-in" || !session || !["admin", "coach"].includes(session.user.role)) {
+    return (
+      <div className="admin-page-shell">
+        <div className="admin-card">
+          <p className="eyebrow">Loading</p>
+          <h1 className="display-title" style={{ fontSize: "2rem" }}>
+            Preparing your workspace
+          </h1>
+          <p className="display-copy">Checking access and restoring the current session.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const user = session.user;
   const visibleGroups = getVisibleNavigation(user.role).filter((group) => group.items.length > 0);
   const isCoach = user.role === "coach";
 
@@ -31,9 +63,19 @@ export function AdminShell({ children }: AdminShellProps) {
               <strong>{user.role}</strong>
               {isCoach ? "coach access" : "admin access"}
             </span>
-            <Link className="button button-secondary" href="/login">
+            <span className="pill">
+              <strong>Signed in</strong>
+              {user.displayName}
+            </span>
+            <button
+              className="button button-secondary"
+              onClick={() => {
+                void signOut().then(() => router.replace("/login"));
+              }}
+              type="button"
+            >
               Sign out
-            </Link>
+            </button>
           </div>
         </header>
 
@@ -55,7 +97,12 @@ export function AdminShell({ children }: AdminShellProps) {
                   <div className="admin-nav-group" key={group.label}>
                     <p className="admin-nav-label">{group.label}</p>
                     {group.items.map((item) => (
-                      <Link className="admin-nav-link" href={item.href} key={item.href}>
+                      <Link
+                        className="admin-nav-link"
+                        data-active={pathname === item.href}
+                        href={item.href}
+                        key={item.href}
+                      >
                         <span>
                           <strong>{item.label}</strong>
                           <br />

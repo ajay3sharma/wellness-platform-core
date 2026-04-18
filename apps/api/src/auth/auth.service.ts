@@ -1,22 +1,44 @@
-import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable, OnModuleInit, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { createHash, randomUUID } from "node:crypto";
+import type { Prisma, User } from "@prisma/client";
 import type {
+  AccountProfile,
   AuthSession,
   AuthTokens,
   CurrentUser,
   LoginRequest,
   LogoutRequest,
-  RefreshSessionRequest
+  RefreshSessionRequest,
+  RegisterRequest,
+  RegisterResult
 } from "@platform/types";
-import { type ApiConfig } from "../config/api-config";
+import { randomUUID } from "node:crypto";
+import { createApiException } from "../common/api-error.util";
+import type { ApiConfig } from "../config/api-config";
 import { API_CONFIG } from "../config/api-config.token";
 import { PrismaService } from "../prisma/prisma.service";
 import { ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE } from "./auth.constants";
-import type { AccessTokenPayload, RefreshTokenPayload, StoredSession } from "./auth.types";
+import type { RefreshTokenPayload } from "./auth.types";
+import { formatDisplayName, hashPassword, normalizeEmail, verifyPassword } from "./auth.utils";
 
-function toIso(date: Date): string {
-  return date.toISOString();
+type AuthUserRecord = Prisma.UserGetPayload<{
+  include: {
+    coachAssignment: true;
+  };
+}>;
+
+type SessionRecord = Prisma.RefreshTokenGetPayload<{
+  include: {
+    user: {
+      include: {
+        coachAssignment: true;
+      };
+    };
+  };
+}>;
+
+function toIso(value: Date): string {
+  return value.toISOString();
 }
 
 function addDays(date: Date, days: number): Date {
@@ -28,33 +50,105 @@ function addMinutes(date: Date, minutes: number): Date {
 }
 
 @Injectable()
-export class AuthService {
-  private readonly sessions = new Map<string, StoredSession>();
-
+export class AuthService implements OnModuleInit {
   constructor(
     private readonly jwtService: JwtService,
     @Inject(API_CONFIG) private readonly config: ApiConfig,
     private readonly prisma: PrismaService
   ) {}
 
-  async login(payload: LoginRequest): Promise<AuthSession> {
-    this.assertDevCredentials(payload.email, payload.password);
+  async onModuleInit() {
+    const email = normalizeEmail(this.config.bootstrapAdmin.email);
 
-    const user = this.createUserSnapshot(payload.email);
+    await this.prisma.user.upsert({
+      where: { email },
+      update: {
+        displayName: this.config.bootstrapAdmin.displayName.trim(),
+        role: "admin",
+        status: "active",
+        requestedRole: null,
+        activeBrand: this.config.brand.key,
+        passwordHash: await hashPassword(this.config.bootstrapAdmin.password)
+      },
+      create: {
+        email,
+        displayName: this.config.bootstrapAdmin.displayName.trim(),
+        role: "admin",
+        status: "active",
+        requestedRole: null,
+        activeBrand: this.config.brand.key,
+        passwordHash: await hashPassword(this.config.bootstrapAdmin.password)
+      }
+    });
+  }
+
+  async register(payload: RegisterRequest): Promise<RegisterResult> {
+    const email = normalizeEmail(payload.email);
+    const existing = await this.prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existing) {
+      throw createApiException(HttpStatus.CONFLICT, "EMAIL_IN_USE", "An account already exists for this email.");
+    }
+
+    const requestedRole = payload.role === "user" ? null : payload.role;
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        displayName: payload.displayName.trim() || formatDisplayName(email),
+        role: "user",
+        status: requestedRole ? "pending_approval" : "active",
+        requestedRole,
+        activeBrand: this.config.brand.key,
+        passwordHash: await hashPassword(payload.password)
+      },
+      include: {
+        coachAssignment: true
+      }
+    });
+
+    const account = this.toAccountProfile(user);
+
+    if (requestedRole) {
+      return {
+        account,
+        session: null,
+        message: `Your ${requestedRole} access request is pending approval.`
+      };
+    }
+
+    return {
+      account,
+      session: await this.issueSession(user),
+      message: "Your account is ready."
+    };
+  }
+
+  async login(payload: LoginRequest): Promise<AuthSession> {
+    const user = await this.findUserByEmail(payload.email);
+
+    if (!user || !(await verifyPassword(payload.password, user.passwordHash))) {
+      throw new UnauthorizedException("Invalid credentials.");
+    }
+
+    this.assertAccountCanSignIn(user);
     return this.issueSession(user);
   }
 
   async refresh(payload: RefreshSessionRequest): Promise<AuthSession> {
     const verified = await this.verifyRefreshToken(payload.refreshToken);
-    const session = this.sessions.get(verified.sid);
+    const session = await this.findActiveSession(verified.sid);
 
-    if (!session || session.revokedAt || session.refreshTokenId !== verified.jti) {
+    if (!session || session.tokenId !== verified.jti || session.userId !== verified.sub) {
       throw new UnauthorizedException("Refresh session is no longer active.");
     }
 
+    this.assertAccountCanSignIn(session.user);
+
     const tokens = await this.rotateSession(session);
     return {
-      user: session.user,
+      user: this.toCurrentUser(session.user),
       tokens
     };
   }
@@ -62,58 +156,71 @@ export class AuthService {
   async logout(payload: LogoutRequest): Promise<void> {
     try {
       const verified = await this.verifyRefreshToken(payload.refreshToken);
-      const session = this.sessions.get(verified.sid);
-      if (session) {
-        session.revokedAt = new Date().toISOString();
-      }
-      this.sessions.delete(verified.sid);
+      await this.prisma.refreshToken.updateMany({
+        where: {
+          sessionId: verified.sid,
+          userId: verified.sub
+        },
+        data: {
+          revokedAt: new Date()
+        }
+      });
     } catch {
       return;
     }
   }
 
-  toCurrentUser(payload: AccessTokenPayload): CurrentUser {
-    return {
-      id: payload.sub,
-      email: payload.email,
-      displayName: payload.displayName,
-      role: payload.role,
-      activeBrand: payload.activeBrand,
-      coachId: payload.coachId
-    };
+  async getCurrentUserForSession(userId: string, sessionId: string): Promise<CurrentUser> {
+    const session = await this.findActiveSession(sessionId);
+
+    if (!session || session.userId !== userId) {
+      throw new UnauthorizedException("Invalid or expired access token.");
+    }
+
+    this.assertAccountCanSignIn(session.user);
+    return this.toCurrentUser(session.user);
   }
 
-  private async issueSession(user: CurrentUser): Promise<AuthSession> {
+  private async issueSession(user: AuthUserRecord): Promise<AuthSession> {
     const sessionId = randomUUID();
     const refreshTokenId = randomUUID();
     const tokens = await this.createTokens(user, sessionId, refreshTokenId);
 
-    this.sessions.set(sessionId, {
-      sessionId,
-      user,
-      refreshTokenId,
-      revokedAt: undefined,
-      expiresAt: tokens.refreshTokenExpiresAt
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        sessionId,
+        tokenId: refreshTokenId,
+        expiresAt: new Date(tokens.refreshTokenExpiresAt)
+      }
     });
 
     return {
-      user,
+      user: this.toCurrentUser(user),
       tokens
     };
   }
 
-  private async rotateSession(session: StoredSession): Promise<AuthTokens> {
+  private async rotateSession(session: SessionRecord): Promise<AuthTokens> {
     const refreshTokenId = randomUUID();
     const tokens = await this.createTokens(session.user, session.sessionId, refreshTokenId);
 
-    session.refreshTokenId = refreshTokenId;
-    session.expiresAt = tokens.refreshTokenExpiresAt;
+    await this.prisma.refreshToken.update({
+      where: {
+        sessionId: session.sessionId
+      },
+      data: {
+        tokenId: refreshTokenId,
+        revokedAt: null,
+        expiresAt: new Date(tokens.refreshTokenExpiresAt)
+      }
+    });
 
     return tokens;
   }
 
   private async createTokens(
-    user: CurrentUser,
+    user: AuthUserRecord,
     sessionId: string,
     refreshTokenId: string
   ): Promise<AuthTokens> {
@@ -121,16 +228,18 @@ export class AuthService {
     const accessExpiresAt = addMinutes(issuedAt, this.config.auth.accessTokenTtlMinutes);
     const refreshExpiresAt = addDays(issuedAt, this.config.auth.refreshTokenTtlDays);
 
+    const snapshot = this.toCurrentUser(user);
+
     const accessToken = await this.jwtService.signAsync(
       {
         typ: ACCESS_TOKEN_TYPE,
         sid: sessionId,
-        sub: user.id,
-        email: user.email,
-        displayName: user.displayName,
-        role: user.role,
-        activeBrand: user.activeBrand,
-        coachId: user.coachId
+        sub: snapshot.id,
+        email: snapshot.email,
+        displayName: snapshot.displayName,
+        role: snapshot.role,
+        activeBrand: snapshot.activeBrand,
+        coachId: snapshot.coachId
       },
       {
         secret: this.config.auth.accessSecret,
@@ -145,7 +254,7 @@ export class AuthService {
         typ: REFRESH_TOKEN_TYPE,
         sid: sessionId,
         jti: refreshTokenId,
-        sub: user.id
+        sub: snapshot.id
       },
       {
         secret: this.config.auth.refreshSecret,
@@ -171,29 +280,69 @@ export class AuthService {
     });
   }
 
-  private assertDevCredentials(email: string, password: string) {
-    if (email !== this.config.devAuth.email || password !== this.config.devAuth.password) {
-      throw new UnauthorizedException("Invalid credentials.");
+  private async findUserByEmail(email: string): Promise<AuthUserRecord | null> {
+    return this.prisma.user.findUnique({
+      where: {
+        email: normalizeEmail(email)
+      },
+      include: {
+        coachAssignment: true
+      }
+    });
+  }
+
+  private async findActiveSession(sessionId: string): Promise<SessionRecord | null> {
+    const session = await this.prisma.refreshToken.findUnique({
+      where: { sessionId },
+      include: {
+        user: {
+          include: {
+            coachAssignment: true
+          }
+        }
+      }
+    });
+
+    if (!session) {
+      return null;
+    }
+
+    if (session.revokedAt || session.expiresAt.getTime() <= Date.now()) {
+      return null;
+    }
+
+    return session;
+  }
+
+  private assertAccountCanSignIn(user: Pick<User, "status" | "requestedRole">) {
+    if (user.status === "pending_approval") {
+      throw createApiException(
+        HttpStatus.FORBIDDEN,
+        "ACCOUNT_PENDING_APPROVAL",
+        "Your access request is still waiting for approval.",
+        {
+          requestedRole: user.requestedRole ?? "user"
+        }
+      );
     }
   }
 
-  private createUserSnapshot(email: string): CurrentUser {
-    const normalizedEmail = email.trim().toLowerCase();
-    const id = createHash("sha256").update(normalizedEmail).digest("hex").slice(0, 12);
-    const displayName = normalizedEmail
-      .split("@")[0]
-      .split(/[._-]/)
-      .filter(Boolean)
-      .map((part) => part[0]?.toUpperCase() + part.slice(1))
-      .join(" ");
-
+  private toCurrentUser(user: AuthUserRecord): CurrentUser {
     return {
-      id: `usr_${id}`,
-      email: normalizedEmail,
-      displayName: displayName || `${this.config.brand.productName} Admin`,
-      role: normalizedEmail === this.config.devAuth.email.trim().toLowerCase() ? "admin" : "user",
-      activeBrand: this.config.brand.key,
-      coachId: null
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      activeBrand: user.activeBrand as CurrentUser["activeBrand"],
+      coachId: user.coachAssignment?.coachId ?? null
+    };
+  }
+
+  private toAccountProfile(user: AuthUserRecord): AccountProfile {
+    return {
+      ...this.toCurrentUser(user),
+      status: user.status,
+      requestedRole: user.requestedRole
     };
   }
 }

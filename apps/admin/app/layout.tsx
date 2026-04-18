@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import { adminBrand, adminMetadata } from "../lib/brand";
+import { AdminSessionProvider } from "../lib/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
   return (
     <html lang="en">
-      <body style={themeStyle}>{children}</body>
+      <body style={themeStyle}>
+        <AdminSessionProvider>{children}</AdminSessionProvider>
+      </body>
     </html>
   );
 }

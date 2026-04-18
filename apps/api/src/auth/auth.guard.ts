@@ -6,13 +6,13 @@ import {
   UnauthorizedException
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import type { Request } from "express";
 import type { CurrentUser } from "@platform/types";
-import { API_CONFIG } from "../config/api-config.token";
+import type { Request } from "express";
 import type { ApiConfig } from "../config/api-config";
-import { extractBearerToken } from "./auth.utils";
-import type { AccessTokenPayload } from "./auth.types";
+import { API_CONFIG } from "../config/api-config.token";
 import { AuthService } from "./auth.service";
+import type { AccessTokenPayload } from "./auth.types";
+import { extractBearerToken } from "./auth.utils";
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
@@ -37,7 +37,7 @@ export class AccessTokenGuard implements CanActivate {
         audience: this.config.auth.audience
       });
 
-      const user: CurrentUser = this.authService.toCurrentUser(payload);
+      const user = await this.authService.getCurrentUserForSession(payload.sub, payload.sid);
       request.user = user;
       return true;
     } catch {

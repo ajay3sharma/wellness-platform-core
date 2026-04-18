@@ -8,37 +8,198 @@ datasource db {
 }
 
 enum Role {
-  USER
-  COACH
-  ADMIN
+  user
+  coach
+  admin
+}
+
+enum AccountStatus {
+  active
+  pending_approval
+}
+
+enum WorkoutStatus {
+  draft
+  published
+}
+
+enum WorkoutDifficulty {
+  beginner
+  intermediate
+  advanced
+}
+
+enum WorkoutSessionStatus {
+  in_progress
+  completed
 }
 
 model User {
-  id           String         @id @default(cuid())
-  email        String         @unique
-  displayName  String
-  role         Role           @default(USER)
-  activeBrand  String
-  coachId      String?
-  passwordHash String?
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  sessions     RefreshToken[]
+  id                     String                @id @default(cuid())
+  email                  String                @unique
+  displayName            String
+  role                   Role                  @default(user)
+  status                 AccountStatus         @default(active)
+  requestedRole          Role?
+  activeBrand            String
+  passwordHash           String
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
+  refreshTokens          RefreshToken[]
+  coachAssignment        UserCoachAssignment?  @relation("AssignedCoachForUser")
+  assignedUsers          UserCoachAssignment[] @relation("CoachAssignments")
+  coachAssignmentsCreated UserCoachAssignment[] @relation("CoachAssignedBy")
+  workoutSessions        WorkoutSession[]
+  workoutAssignments     WorkoutAssignment[]   @relation("AssignedWorkoutsForUser")
+  workoutsAssignedBy     WorkoutAssignment[]   @relation("AssignedWorkoutsByCoach")
+  coachNotes             CoachNote[]           @relation("CoachNotesForUser")
+  coachNotesAuthored     CoachNote[]           @relation("CoachNotesByCoach")
 
+  @@index([role])
+  @@index([status])
   @@map("users")
 }
 
 model RefreshToken {
-  id          String   @id @default(cuid())
-  userId      String
-  sessionId   String   @unique
-  tokenId     String   @unique
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id         String   @id @default(cuid())
+  userId     String
+  sessionId  String   @unique
+  tokenId    String   @unique
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("refresh_tokens")
+}
+
+model Workout {
+  id              String           @id @default(cuid())
+  title           String
+  description     String
+  difficulty      WorkoutDifficulty
+  durationMinutes Int
+  category        String?
+  tags            String[]
+  status          WorkoutStatus    @default(draft)
+  publishedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  exercises       WorkoutExercise[]
+  sessions        WorkoutSession[]
+  assignments     WorkoutAssignment[]
+
+  @@index([status])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id                   String   @id @default(cuid())
+  workoutId            String
+  name                 String
+  instruction          String?
+  repTarget            String?
+  timeTargetSeconds    Int?
+  distanceTargetMeters Int?
+  restSeconds          Int?
+  sequence             Int
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  workout              Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  sessionExercises     WorkoutSessionExercise[]
+
+  @@index([workoutId])
+  @@unique([workoutId, sequence])
+  @@map("workout_exercises")
+}
+
+model WorkoutSession {
+  id         String                 @id @default(cuid())
+  workoutId  String
+  userId     String
+  status     WorkoutSessionStatus   @default(in_progress)
+  notes      String?
+  startedAt  DateTime               @default(now())
+  completedAt DateTime?
+  createdAt  DateTime               @default(now())
+  updatedAt  DateTime               @updatedAt
+  workout    Workout                @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercises  WorkoutSessionExercise[]
+
+  @@index([userId, startedAt(sort: Desc)])
+  @@index([workoutId])
+  @@map("workout_sessions")
+}
+
+model WorkoutSessionExercise {
+  id                   String         @id @default(cuid())
+  workoutSessionId     String
+  workoutExerciseId    String?
+  name                 String
+  instruction          String?
+  repTarget            String?
+  timeTargetSeconds    Int?
+  distanceTargetMeters Int?
+  restSeconds          Int?
+  sequence             Int
+  completed            Boolean        @default(false)
+  notes                String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  workoutSession       WorkoutSession @relation(fields: [workoutSessionId], references: [id], onDelete: Cascade)
+  workoutExercise      WorkoutExercise? @relation(fields: [workoutExerciseId], references: [id], onDelete: SetNull)
+
+  @@index([workoutSessionId])
+  @@unique([workoutSessionId, sequence])
+  @@map("workout_session_exercises")
+}
+
+model UserCoachAssignment {
+  id           String   @id @default(cuid())
+  userId        String   @unique
+  coachId       String
+  assignedById  String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation("AssignedCoachForUser", fields: [userId], references: [id], onDelete: Cascade)
+  coach         User     @relation("CoachAssignments", fields: [coachId], references: [id], onDelete: Cascade)
+  assignedBy    User?    @relation("CoachAssignedBy", fields: [assignedById], references: [id], onDelete: SetNull)
+
+  @@index([coachId])
+  @@map("user_coach_assignments")
+}
+
+model WorkoutAssignment {
+  id         String   @id @default(cuid())
+  workoutId   String
+  userId      String
+  coachId     String
+  note        String?
+  assignedAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workout     Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  user        User     @relation("AssignedWorkoutsForUser", fields: [userId], references: [id], onDelete: Cascade)
+  coach       User     @relation("AssignedWorkoutsByCoach", fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutId, userId])
+  @@index([coachId])
+  @@map("workout_assignments")
+}
+
+model CoachNote {
+  id         String   @id @default(cuid())
+  userId      String
+  coachId     String
+  note        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation("CoachNotesForUser", fields: [userId], references: [id], onDelete: Cascade)
+  coach       User     @relation("CoachNotesByCoach", fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, coachId])
+  @@index([coachId])
+  @@map("coach_notes")
 }

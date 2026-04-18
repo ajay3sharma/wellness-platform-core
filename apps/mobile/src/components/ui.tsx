@@ -55,25 +55,30 @@ export function MetricCard({
 export function ActionButton({
   label,
   onPress,
-  variant = "primary"
+  variant = "primary",
+  disabled = false
 }: {
   label: string;
   onPress: () => void;
   variant?: "primary" | "secondary";
+  disabled?: boolean;
 }) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionButton,
         variant === "secondary" && styles.actionButtonSecondary,
+        disabled && styles.actionButtonDisabled,
         pressed && styles.actionButtonPressed
       ]}
     >
       <Text
         style={[
           styles.actionButtonText,
-          variant === "secondary" && styles.actionButtonTextSecondary
+          variant === "secondary" && styles.actionButtonTextSecondary,
+          disabled && styles.actionButtonTextDisabled
         ]}
       >
         {label}
@@ -177,6 +182,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
     transform: [{ scale: 0.99 }]
   },
+  actionButtonDisabled: {
+    opacity: 0.55
+  },
   actionButtonText: {
     color: "#FFFFFF",
     fontSize: 14,
@@ -184,6 +192,9 @@ const styles = StyleSheet.create({
   },
   actionButtonTextSecondary: {
     color: "#122036"
+  },
+  actionButtonTextDisabled: {
+    color: "#465363"
   },
   textField: {
     borderRadius: 18,

@@ -18,21 +18,23 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const status =
       exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
     const payload = exception instanceof HttpException ? exception.getResponse() : undefined;
+    const payloadObject =
+      payload && typeof payload === "object" && !Array.isArray(payload)
+        ? (payload as Record<string, unknown>)
+        : undefined;
     const message =
       typeof payload === "string"
         ? payload
-        : (payload as Record<string, unknown> | undefined)?.message?.toString() ??
-          "Unexpected API error.";
+        : payloadObject?.message?.toString() ?? "Unexpected API error.";
 
     const error: ApiError = {
-      code: exception instanceof HttpException ? `HTTP_${status}` : "INTERNAL_SERVER_ERROR",
+      code:
+        (payloadObject?.code as string | undefined) ??
+        (exception instanceof HttpException ? `HTTP_${status}` : "INTERNAL_SERVER_ERROR"),
       message,
       status,
       traceId: request?.headers?.["x-request-id"]?.toString(),
-      details:
-        payload && typeof payload === "object" && !Array.isArray(payload)
-          ? (payload as Record<string, unknown>)
-          : undefined
+      details: payloadObject?.details as Record<string, unknown> | undefined
     };
 
     response.status(status).json(error);

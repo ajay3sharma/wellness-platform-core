@@ -1,4 +1,4 @@
-import type { BrandKey, CurrentUser, Role } from "@platform/types";
+import type { BrandKey, Role } from "@platform/types";
 
 export interface AccessTokenPayload {
   typ: "access";
@@ -16,12 +16,4 @@ export interface RefreshTokenPayload {
   sid: string;
   jti: string;
   sub: string;
-}
-
-export interface StoredSession {
-  sessionId: string;
-  user: CurrentUser;
-  refreshTokenId: string;
-  expiresAt: string;
-  revokedAt?: string;
 }

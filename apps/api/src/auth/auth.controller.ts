@@ -1,15 +1,21 @@
 import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
-import type { AuthSession, CurrentUser } from "@platform/types";
+import type { AuthSession, CurrentUser, RegisterResult } from "@platform/types";
 import { CurrentUserDecorator } from "../common/current-user.decorator";
 import { AccessTokenGuard } from "./auth.guard";
 import { AuthService } from "./auth.service";
 import { LoginRequestDto } from "./dto/login-request.dto";
 import { LogoutRequestDto } from "./dto/logout-request.dto";
 import { RefreshSessionRequestDto } from "./dto/refresh-session.dto";
+import { RegisterRequestDto } from "./dto/register-request.dto";
 
 @Controller("auth")
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post("register")
+  register(@Body() body: RegisterRequestDto): Promise<RegisterResult> {
+    return this.authService.register(body);
+  }
 
   @Post("login")
   login(@Body() body: LoginRequestDto): Promise<AuthSession> {

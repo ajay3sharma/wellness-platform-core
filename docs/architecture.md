@@ -1,15 +1,17 @@
 # Architecture Snapshot
 
+This document captures the structural platform picture. The delivery order, dependency gates, and phase-by-phase execution plan live in [plan.md](../plan.md).
+
 ## Goal
 
 This repository is the bootstrap foundation for a custom full-stack, white-label fitness and wellness platform. It deliberately separates platform identity from product branding so the codebase can support different branded deployments over time.
 
 ## Apps
 
-- `apps/mobile`: Expo + Expo Router mobile app scaffold for the primary consumer experience
+- `apps/mobile`: Expo + Expo Router mobile app for the primary consumer experience, currently implementing auth and fitness flows
 - `apps/web`: Next.js consumer web scaffold for marketing, auth, commerce, and account flows
-- `apps/admin`: Next.js admin and coach portal scaffold
-- `apps/api`: NestJS backend scaffold with auth, health, config, and Prisma wiring
+- `apps/admin`: Next.js admin and coach portal with Phase 1 content and coaching workspace
+- `apps/api`: NestJS backend with auth, health, config, Prisma wiring, workouts, workout sessions, and coaching endpoints
 
 ## Shared Packages
 
@@ -38,11 +40,22 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 
 ## Auth And Data
 
-- Authentication scaffolds on custom JWT access and refresh tokens
-- Runtime data layer scaffolds on Postgres + Prisma
+- Authentication runs on custom JWT access and refresh tokens
+- Runtime data layer runs on Postgres + Prisma
 - Neon-compatible Postgres is the default dev target through environment variables
 - Shared auth/session contracts live in `@platform/types`
-- The current API scaffold exposes login, refresh, logout, current-user, and health endpoints
+- The current API exposes register, login, refresh, logout, current-user, health, workout, workout-session, admin-user, and coach-user endpoints
+
+## Current Delivered Scope
+
+- Phase 0 foundation is complete
+- Phase 1 is implemented with:
+  - public user signup on mobile
+  - pending approval flow for coach and admin access requests
+  - admin workout CRUD and publish or unpublish controls
+  - mobile workout browse, detail, start, update, complete, and history flows
+  - coach workspace for assigned users, workout assignment, history review, and coach notes
+- Phase 2 wellness remains the next domain milestone
 
 ## AI Constraints
 
@@ -73,7 +86,7 @@ Default local ports:
 - api: `4000`
 - Expo Metro: `8081`
 
-## Current Scaffolded Surfaces
+## Current Surfaces
 
 Web routes:
 
@@ -98,11 +111,11 @@ API routes:
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
 
-Mobile scaffold:
+Mobile surface:
 
-- auth entry route
+- sign-in and sign-up routes
 - tab shell
-- home, workouts, reset, progress, and store tabs
+- home, workouts, workout detail, workout session, progress, reset, and store routes
 - Expo app config driven by shared brand and config packages
 
 ## Bootstrap Validation
