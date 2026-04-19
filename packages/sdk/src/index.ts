@@ -116,9 +116,13 @@ async function request<TResponse>(
 }
 
 export function createApiClient(options: ApiClientOptions = {}): ApiClient {
+  const fetcher: typeof globalThis.fetch = options.fetcher
+    ? ((input, init) => options.fetcher!.call(globalThis, input, init)) as typeof globalThis.fetch
+    : ((input, init) => globalThis.fetch(input, init)) as typeof globalThis.fetch;
+
   const resolvedOptions: Required<ApiClientOptions> = {
     baseUrl: options.baseUrl ?? `${platformConfig.services.api.publicUrl}${platformConfig.services.api.basePath}`,
-    fetcher: options.fetcher ?? fetch,
+    fetcher,
     getAccessToken: options.getAccessToken ?? (() => undefined)
   };
 

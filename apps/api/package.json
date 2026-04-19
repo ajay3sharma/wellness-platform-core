@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node ../../scripts/fix-esm-specifiers.mjs dist/apps/api/src",
-    "dev": "pnpm run prisma:generate && tsc-watch -p tsconfig.build.json --onSuccess \"node ../../scripts/run-api-dev-server.mjs\"",
+    "dev": "prisma generate --schema prisma/schema.prisma && tsc-watch -p tsconfig.build.json --onSuccess \"node ../../scripts/run-api-dev-server.mjs\"",
     "lint": "eslint src --max-warnings=0",
     "start": "node dist/apps/api/src/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",

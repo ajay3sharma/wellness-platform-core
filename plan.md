@@ -9,7 +9,7 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Brand-neutral foundation is in place with `MoveYOU` as the first brand pack
 - Root dev, build, lint, and typecheck workflows are already wired
 - Phase 0 is complete and committed
-- Phase 1 is implemented in the current baseline across `apps/api`, `apps/admin`, and `apps/mobile`
+- Phase 1 is accepted and runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 
 ## Stable Platform Decisions
 
@@ -143,6 +143,18 @@ Deliver the first real end-to-end path across `apps/api`, `apps/admin`, and `app
 - protected routes reject invalid or unauthorized access
 - admins can approve privileged role requests and assign coaches
 - coaches can view assigned users, assign published workouts, and save notes
+
+### Acceptance Status
+
+Phase 1 acceptance has been re-validated on the current baseline, including:
+
+- root `dev`, `dev:api`, and `dev:admin` startup support
+- bootstrap admin login
+- coach and admin pending approval enforcement
+- workout CRUD and publish flow
+- coach assignment, notes, and workout history access
+- mobile signup, login, workout session, and history flow
+- refresh and logout token behavior
 
 ## Phase 2: Wellness Slice
 

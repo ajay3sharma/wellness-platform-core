@@ -79,7 +79,7 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 ## Current Phase Status
 
 - Phase 0: complete
-- Phase 1: complete in the current local baseline
+- Phase 1: accepted and runtime-validated in the current baseline
 - Phase 2: next
 
 ## Contract Freeze Rules
@@ -98,7 +98,7 @@ This is the main dependency gate before major parallel implementation.
 
 ## Phase 1 Baseline
 
-The first real product milestone is implemented and includes more than the earliest slim slice:
+The first real product milestone is accepted and includes more than the earliest slim slice:
 
 1. persisted auth with Prisma + Postgres
 2. public signup for users plus approval-gated coach and admin requests
@@ -106,6 +106,8 @@ The first real product milestone is implemented and includes more than the earli
 4. mobile login + workout browse/detail/start/complete/history
 5. protected API routes for auth, workouts, workout sessions, admin user operations, and coach workspace operations
 6. coach workspace for assigned users, workout assignment, history review, and coach notes
+
+Phase 1 acceptance has already been validated on the current baseline through the supported local runtime path, including admin auth, request-access flow, workout CRUD and publishing, coach assignment workflows, mobile user signup and workout sessions, and refresh/logout protections.
 
 `apps/web` remains mostly scaffold-only at this stage.
 
@@ -195,6 +197,8 @@ The first real product milestone is implemented and includes more than the earli
 - Brand check: `node scripts/brand-check.mjs`
 - Repo check: `node scripts/repo-check.mjs`
 - Branch names: `codex/<task-name>`
+
+The root dev commands load the repo-level `.env` before starting each workspace so local service URLs and bootstrap settings stay consistent.
 
 ## Local Defaults
 

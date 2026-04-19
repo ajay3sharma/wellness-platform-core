@@ -1,7 +1,16 @@
+import path from "node:path";
 import type { ConfigContext, ExpoConfig } from "expo/config";
 import { getBrandPack, getBrandMetadata } from "@platform/brand";
 import { platformConfig, runtimeEnv } from "@platform/config";
 import { createSurfaceTheme } from "@platform/ui";
+
+for (const envPath of [path.resolve(process.cwd(), "../..", ".env"), path.resolve(process.cwd(), ".env")]) {
+  try {
+    process.loadEnvFile(envPath);
+  } catch {
+    // Optional local env files are loaded when present.
+  }
+}
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   const brand = getBrandPack();

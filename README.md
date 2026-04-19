@@ -7,7 +7,7 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 ## Current Status
 
 - Phase 0 shared foundation is complete
-- Phase 1 auth, signup, fitness, and coach workspace is implemented across `apps/api`, `apps/admin`, and `apps/mobile`
+- Phase 1 auth, signup, fitness, and coach workspace is now runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - `apps/web` remains scaffold-only by design at this stage
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
@@ -50,6 +50,8 @@ Start one surface at a time:
 - `corepack pnpm dev:admin`
 - `corepack pnpm dev:api`
 - `corepack pnpm dev:mobile`
+
+These commands load the root `.env` automatically so the local API URL and shared runtime settings resolve consistently across admin, web, mobile, and API development.
 
 Default local URLs:
 
@@ -94,7 +96,7 @@ Invoke-RestMethod `
 ## Phase Status
 
 - Phase 0: complete
-- Phase 1: complete in the current baseline
+- Phase 1: accepted and runtime-validated
 - Phase 2: next
 
 ## Git Workflow

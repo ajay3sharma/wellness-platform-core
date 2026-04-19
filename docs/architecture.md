@@ -49,7 +49,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 ## Current Delivered Scope
 
 - Phase 0 foundation is complete
-- Phase 1 is implemented with:
+- Phase 1 is accepted and runtime-validated with:
   - public user signup on mobile
   - pending approval flow for coach and admin access requests
   - admin workout CRUD and publish or unpublish controls
@@ -78,6 +78,8 @@ Root shortcuts:
 - `corepack pnpm dev:admin`
 - `corepack pnpm dev:api`
 - `corepack pnpm dev:mobile`
+
+The repo-level dev entry points load the root `.env` before starting each workspace so local API base URLs and bootstrap credentials stay aligned across surfaces.
 
 Default local ports:
 

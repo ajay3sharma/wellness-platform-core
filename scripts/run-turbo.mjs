@@ -1,5 +1,6 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { loadWorkspaceEnv } from "./load-workspace-env.mjs";
 
 const [task, ...extraArgs] = process.argv.slice(2);
 
@@ -9,6 +10,7 @@ if (!task) {
 }
 
 const root = process.cwd();
+loadWorkspaceEnv(root);
 const turboBinary = path.join(
   root,
   "node_modules",
