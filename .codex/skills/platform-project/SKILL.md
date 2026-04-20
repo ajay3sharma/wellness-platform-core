@@ -80,7 +80,8 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 
 - Phase 0: complete
 - Phase 1: accepted and runtime-validated in the current baseline
-- Phase 2: next
+- Phase 2: implemented and locally validated in the current baseline
+- Phase 3: next
 
 ## Contract Freeze Rules
 

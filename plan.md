@@ -10,6 +10,7 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Root dev, build, lint, and typecheck workflows are already wired
 - Phase 0 is complete and committed
 - Phase 1 is accepted and runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
+- Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 
 ## Stable Platform Decisions
 
@@ -183,6 +184,17 @@ Add the first working reset and wellness domain on top of the auth foundation.
 - mobile can browse and play supported wellness content
 - non-wellness product flows remain unaffected
 
+### Acceptance Status
+
+Phase 2 has been locally validated on the current baseline, including:
+
+- Prisma schema sync for the wellness domain
+- admin wellness create, edit, publish, and unpublish endpoints
+- user-facing wellness visibility rules for published versus draft content
+- timezone-aware daily quote and panchang resolution
+- admin route serving for `/login`, `/request-access`, and `/content`
+- lint, typecheck, and build on the updated monorepo
+
 ## Phase 3: Commerce + Subscriptions
 
 ### Goal
@@ -281,4 +293,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The next implementation milestone is **Phase 2: Wellness Slice**.
+The next implementation milestone is **Phase 3: Commerce + Subscriptions**.

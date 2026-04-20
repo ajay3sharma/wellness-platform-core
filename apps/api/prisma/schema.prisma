@@ -23,6 +23,11 @@ enum WorkoutStatus {
   published
 }
 
+enum ContentStatus {
+  draft
+  published
+}
+
 enum WorkoutDifficulty {
   beginner
   intermediate
@@ -58,6 +63,92 @@ model User {
   @@index([role])
   @@index([status])
   @@map("users")
+}
+
+model RelaxationTechnique {
+  id                       String           @id @default(cuid())
+  title                    String
+  description              String
+  category                 String?
+  tags                     String[]
+  estimatedDurationMinutes Int
+  coverImageUrl            String?
+  status                   ContentStatus    @default(draft)
+  publishedAt              DateTime?
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  steps                    RelaxationStep[]
+
+  @@index([status])
+  @@map("relaxation_techniques")
+}
+
+model RelaxationStep {
+  id                    String               @id @default(cuid())
+  relaxationTechniqueId String
+  title                 String
+  instruction           String
+  durationSeconds       Int
+  sequence              Int
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  relaxationTechnique   RelaxationTechnique  @relation(fields: [relaxationTechniqueId], references: [id], onDelete: Cascade)
+
+  @@index([relaxationTechniqueId])
+  @@unique([relaxationTechniqueId, sequence])
+  @@map("relaxation_steps")
+}
+
+model MusicTrack {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  category        String?
+  tags            String[]
+  artistName      String
+  durationSeconds Int
+  audioUrl        String
+  artworkUrl      String?
+  status          ContentStatus @default(draft)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  @@map("music_tracks")
+}
+
+model DailyQuoteEntry {
+  id         String        @id @default(cuid())
+  entryDate  DateTime      @unique @db.Date
+  quoteText  String
+  author     String?
+  status     ContentStatus @default(draft)
+  publishedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([status])
+  @@map("daily_quote_entries")
+}
+
+model DailyPanchangEntry {
+  id          String        @id @default(cuid())
+  entryDate   DateTime      @unique @db.Date
+  headline    String
+  tithi       String
+  nakshatra   String
+  sunriseTime String
+  sunsetTime  String
+  focusText   String
+  notes       String?
+  status      ContentStatus @default(draft)
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@map("daily_panchang_entries")
 }
 
 model RefreshToken {

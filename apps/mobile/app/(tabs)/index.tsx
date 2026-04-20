@@ -44,8 +44,8 @@ export default function DashboardScreen() {
         <Surface>
           <SectionTitle
             eyebrow="Today"
-            title="Your live Phase 1 dashboard"
-            subtitle="Published workouts, assigned sessions, and recent completion history."
+            title="Your live training and reset dashboard"
+            subtitle="Published workouts, assigned sessions, recent completion history, and your reset tab all come from the current platform baseline."
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             <MetricCard label="Published workouts" value={String(workouts.length)} hint="Current catalog count" />
@@ -71,7 +71,7 @@ export default function DashboardScreen() {
           <SectionTitle
             eyebrow="Available now"
             title="Pick your next session"
-            subtitle="Open a workout to see details and start a live session."
+            subtitle="Jump into a workout here, then use the reset tab for relaxation and music."
           />
           <View style={{ gap: 12 }}>
             {workouts.slice(0, 3).map((workout) => (
@@ -82,6 +82,19 @@ export default function DashboardScreen() {
                 description={workout.assignment ? `Assigned by ${workout.assignment.coachDisplayName}` : workout.description}
               />
             ))}
+          </View>
+        </Surface>
+
+        <Surface>
+          <SectionTitle
+            eyebrow="Reset"
+            title="Wellness is live"
+            subtitle="Daily quote, panchang, guided relaxation, and music now live inside the reset tab."
+          />
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <ActionButton label="Open reset tab" onPress={() => router.push("/(tabs)/reset")} />
+            </View>
           </View>
         </Surface>
       </ScrollView>

@@ -6,6 +6,7 @@ export type Role = "user" | "coach" | "admin";
 export type AppSurface = "web" | "admin" | "mobile" | "api";
 export type WorkoutDifficulty = "beginner" | "intermediate" | "advanced";
 export type WorkoutStatus = "draft" | "published";
+export type ContentStatus = "draft" | "published";
 export type WorkoutSessionStatus = "in_progress" | "completed";
 export type AccountStatus = "active" | "pending_approval";
 export type AiAvailabilityStatus =
@@ -221,6 +222,123 @@ export interface AppMetadataSnapshot {
   subheadline: string;
   description: string;
   supportEmail: string;
+}
+
+export interface RelaxationStepRecord {
+  id: string;
+  title: string;
+  instruction: string;
+  durationSeconds: number;
+  sequence: number;
+}
+
+export interface RelaxationTechniqueListItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  tags: string[];
+  estimatedDurationMinutes: number;
+  coverImageUrl: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export interface RelaxationTechniqueDetail extends RelaxationTechniqueListItem {
+  steps: RelaxationStepRecord[];
+}
+
+export interface SaveRelaxationTechniqueRequest {
+  title: string;
+  description: string;
+  category?: string | null;
+  tags: string[];
+  estimatedDurationMinutes: number;
+  coverImageUrl?: string | null;
+  steps: Array<{
+    title: string;
+    instruction: string;
+    durationSeconds: number;
+    sequence: number;
+  }>;
+}
+
+export interface MusicTrackListItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  tags: string[];
+  artistName: string;
+  durationSeconds: number;
+  audioUrl: string;
+  artworkUrl: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export type MusicTrackDetail = MusicTrackListItem;
+
+export interface SaveMusicTrackRequest {
+  title: string;
+  description: string;
+  category?: string | null;
+  tags: string[];
+  artistName: string;
+  durationSeconds: number;
+  audioUrl: string;
+  artworkUrl?: string | null;
+}
+
+export interface DailyQuoteRecord {
+  id: string;
+  entryDate: string;
+  quoteText: string;
+  author: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export interface SaveDailyQuoteRequest {
+  entryDate: string;
+  quoteText: string;
+  author?: string | null;
+}
+
+export interface DailyPanchangRecord {
+  id: string;
+  entryDate: string;
+  headline: string;
+  tithi: string;
+  nakshatra: string;
+  sunriseTime: string;
+  sunsetTime: string;
+  focusText: string;
+  notes: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+}
+
+export interface SaveDailyPanchangRequest {
+  entryDate: string;
+  headline: string;
+  tithi: string;
+  nakshatra: string;
+  sunriseTime: string;
+  sunsetTime: string;
+  focusText: string;
+  notes?: string | null;
+}
+
+export interface TodayWellnessSnapshot {
+  resolvedDate: string;
+  timeZone: string;
+  quote: DailyQuoteRecord | null;
+  panchang: DailyPanchangRecord | null;
 }
 
 export interface WorkoutAssignmentRecord {

@@ -8,6 +8,7 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 
 - Phase 0 shared foundation is complete
 - Phase 1 auth, signup, fitness, and coach workspace is now runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
+- Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - `apps/web` remains scaffold-only by design at this stage
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
@@ -97,7 +98,8 @@ Invoke-RestMethod `
 
 - Phase 0: complete
 - Phase 1: accepted and runtime-validated
-- Phase 2: next
+- Phase 2: implemented and locally validated
+- Phase 3: next
 
 ## Git Workflow
 

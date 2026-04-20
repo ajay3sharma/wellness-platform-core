@@ -55,7 +55,13 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
   - admin workout CRUD and publish or unpublish controls
   - mobile workout browse, detail, start, update, complete, and history flows
   - coach workspace for assigned users, workout assignment, history review, and coach notes
-- Phase 2 wellness remains the next domain milestone
+- Phase 2 is implemented and locally validated with:
+  - admin-managed relaxation techniques and guided steps
+  - admin-managed music tracks through external hosted audio URLs
+  - admin-managed daily quote and panchang entries
+  - mobile reset landing backed by the wellness API
+  - relaxation detail flow and in-app music player screens
+- Phase 3 commerce and subscriptions remain the next domain milestone
 
 ## AI Constraints
 

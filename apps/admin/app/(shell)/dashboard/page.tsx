@@ -127,11 +127,12 @@ export default function DashboardPage() {
       <section className="section-grid cols-3">
         <SectionCard
           title="Programs"
-          description="Phase 1 centers on published workouts, session history, and coach assignments."
+          description="The current baseline now covers workouts, coaching workflows, and admin-managed wellness content."
         >
           <div className="stack-tight">
             <div className="pill">Persisted auth and protected routes</div>
             <div className="pill">Workout publish flow</div>
+            <div className="pill">Wellness content studio</div>
             <div className="pill">Coach assignment workspace</div>
           </div>
         </SectionCard>
@@ -156,12 +157,12 @@ export default function DashboardPage() {
           </div>
         </SectionCard>
         <SectionCard
-          title="Out of scope"
-          description="Commerce, AI generation, wellness media, and web parity stay outside Phase 1."
+          title="Still next"
+          description="Commerce, subscriptions, AI tooling, and full web parity remain outside the current implemented slice."
         >
           <div className="stack-tight">
             <div className="pill">No commerce flows yet</div>
-            <div className="pill">No wellness content management</div>
+            <div className="pill">No subscription billing yet</div>
             <div className="pill">No AI tooling in Phase 1</div>
           </div>
         </SectionCard>
