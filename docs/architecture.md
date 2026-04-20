@@ -20,7 +20,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - `@platform/config`: deployment defaults and platform-level settings
 - `@platform/billing`: market-based provider selection and billing interfaces
 - `@platform/ai`: free-tier-only AI defaults and quota helpers
-- `@platform/sdk`: typed API client for auth and health scaffolding
+- `@platform/sdk`: typed API client for auth, workouts, wellness, commerce, and AI flows
 - `@platform/ui`: brand-aware UI token helpers for the future design system
 
 ## Branding
@@ -69,11 +69,17 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
   - web store, account, checkout bridge, and return routes
   - mobile store flows with browser handoff and deep-link return
   - API-backed cart, orders, subscriptions, entitlements, checkout sessions, and provider webhooks
+- Phase 4 AI is implemented and repo-validated with:
+  - Gemini-backed AI adapter behind the internal AI module
+  - Prisma-backed AI usage ledger and UTC-midnight quota enforcement
+  - admin dashboard quota visibility and draft-generation tools for workouts and relaxation
+  - mobile workout and reset recommendation entry points that only rank published catalog content
 - Live provider checkout acceptance still depends on real Stripe and Razorpay credentials plus webhook delivery
 
 ## AI Constraints
 
 - AI is free-tier-only by policy
+- Gemini direct is the current provider implementation, but the API keeps the provider swappable
 - User AI is recommendation-focused, not a full chat coach
 - Admin AI is limited to draft generation and content assistance
 - When quota is exhausted or providers are unavailable, AI features disable gracefully and the rest of the platform remains usable
@@ -130,8 +136,12 @@ API routes:
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
+- `GET /api/v1/ai/quota/me`
+- `POST /api/v1/ai/recommendations/workout`
+- `POST /api/v1/ai/recommendations/reset`
 - store routes for products, plans, cart, checkout sessions, orders, subscriptions, and entitlements
 - admin commerce routes for products, plans, orders, and subscriptions
+- admin AI routes for quota plus workout and relaxation drafts
 - billing webhook routes for Stripe and Razorpay
 
 Mobile surface:
@@ -139,6 +149,7 @@ Mobile surface:
 - sign-in and sign-up routes
 - tab shell
 - home, workouts, workout detail, workout session, progress, reset, and store routes
+- AI recommendation panels on workouts and reset
 - checkout return route for browser-based payment handoff
 - Expo app config driven by shared brand and config packages
 

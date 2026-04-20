@@ -1,6 +1,16 @@
 import { platformConfig } from "@platform/config";
 import type {
+  AdminAiQuotaStatus,
   ApiError,
+  RelaxationDraftRequest,
+  RelaxationDraftResponse,
+  ResetRecommendationRequest,
+  ResetRecommendationResponse,
+  UserAiQuotaStatus,
+  WorkoutDraftRequest,
+  WorkoutDraftResponse,
+  WorkoutRecommendationRequest,
+  WorkoutRecommendationResponse,
   Cart,
   CatalogProductDetail,
   CatalogProductListItem,
@@ -93,6 +103,20 @@ export interface ApiClient {
     listMusic: () => Promise<MusicTrackListItem[]>;
     detailMusic: (trackId: string) => Promise<MusicTrackDetail>;
     daily: (timeZone: string) => Promise<TodayWellnessSnapshot>;
+  };
+  ai: {
+    quota: () => Promise<UserAiQuotaStatus>;
+    workoutRecommendations: (
+      payload: WorkoutRecommendationRequest
+    ) => Promise<WorkoutRecommendationResponse>;
+    resetRecommendations: (
+      payload: ResetRecommendationRequest
+    ) => Promise<ResetRecommendationResponse>;
+    adminQuota: () => Promise<AdminAiQuotaStatus>;
+    createWorkoutDraft: (payload: WorkoutDraftRequest) => Promise<WorkoutDraftResponse>;
+    createRelaxationDraft: (
+      payload: RelaxationDraftRequest
+    ) => Promise<RelaxationDraftResponse>;
   };
   adminWorkouts: {
     list: () => Promise<WorkoutListItem[]>;
@@ -393,6 +417,47 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
         request<TodayWellnessSnapshot>(
           `/wellness/daily?timeZone=${encodeURIComponent(timeZone)}`,
           { method: "GET" },
+          resolvedOptions
+        )
+    },
+    ai: {
+      quota: () => request<UserAiQuotaStatus>("/ai/quota/me", { method: "GET" }, resolvedOptions),
+      workoutRecommendations: (payload) =>
+        request<WorkoutRecommendationResponse>(
+          "/ai/recommendations/workout",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      resetRecommendations: (payload) =>
+        request<ResetRecommendationResponse>(
+          "/ai/recommendations/reset",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      adminQuota: () =>
+        request<AdminAiQuotaStatus>("/admin/ai/quota", { method: "GET" }, resolvedOptions),
+      createWorkoutDraft: (payload) =>
+        request<WorkoutDraftResponse>(
+          "/admin/ai/drafts/workout",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      createRelaxationDraft: (payload) =>
+        request<RelaxationDraftResponse>(
+          "/admin/ai/drafts/relaxation",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
           resolvedOptions
         )
     },

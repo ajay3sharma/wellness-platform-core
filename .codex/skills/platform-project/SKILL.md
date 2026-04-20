@@ -29,6 +29,7 @@ Use this skill for implementation work in this repo. Treat it as the stable proj
   - no paid AI overflow
   - admin AI is draft-generation-only in v1
   - user AI is recommendation-only in v1
+  - current provider implementation is Gemini direct behind the internal API adapter
 
 ## Current Product Surfaces
 
@@ -82,7 +83,9 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 - Phase 1: accepted and runtime-validated in the current baseline
 - Phase 2: implemented and locally validated in the current baseline
 - Phase 3: implemented in code and repo-validated in the current baseline
+- Phase 4: implemented in code and repo-validated in the current baseline
 - Phase 3 live billing acceptance still requires real Stripe and Razorpay credentials plus webhook delivery
+- Phase 4 live AI acceptance still requires a real `GEMINI_API_KEY` for end-to-end provider calls
 
 ## Contract Freeze Rules
 
@@ -172,7 +175,7 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - AI owner: provider adapter, usage ledger, quotas, availability status
 - admin owner: AI draft tools
 - mobile owner: recommendation entry points
-- web owner: optional lightweight recommendation entry points
+- web owner: no current Phase 4 AI scope; keep web AI out unless the user reprioritizes it
 
 ## Billing And AI Rules
 

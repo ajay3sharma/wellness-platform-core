@@ -1,16 +1,64 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { createApiClient } from "@platform/sdk";
 import type {
   ApiError,
   MusicTrackListItem,
   RelaxationTechniqueListItem,
-  TodayWellnessSnapshot
+  ResetRecommendationNeed,
+  ResetRecommendationResponse,
+  TodayWellnessSnapshot,
+  UserAiQuotaStatus
 } from "@platform/types";
-import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
+import {
+  ActionButton,
+  Screen,
+  SectionTitle,
+  Surface,
+  TextField
+} from "../../src/components/ui";
 import { useSession } from "../../src/session";
 import { formatDurationLabel, formatMinutesLabel, resolveDeviceTimeZone } from "../../src/wellness";
+
+const resetNeeds: Array<ResetRecommendationNeed | ""> = ["", "calm", "focus", "sleep", "recovery"];
+
+function ChoiceChip({
+  label,
+  selected,
+  onPress
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 999,
+        backgroundColor: selected ? "#122036" : "#FFFFFF",
+        borderWidth: 1,
+        borderColor: selected ? "#122036" : "rgba(18, 32, 54, 0.12)"
+      }}
+    >
+      <Text style={{ color: selected ? "#FFFFFF" : "#122036", fontWeight: "700" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+function formatQuotaCopy(quota: UserAiQuotaStatus | null) {
+  if (!quota) {
+    return "Loading AI quota and availability.";
+  }
+
+  return `${quota.remainingRequests} requests left today • ${quota.remainingTokens} tokens left • resets ${new Date(quota.resetAt).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit"
+  })} UTC`;
+}
 
 export default function ResetScreen() {
   const { session } = useSession();
@@ -26,6 +74,14 @@ export default function ResetScreen() {
   const [music, setMusic] = useState<MusicTrackListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [quota, setQuota] = useState<UserAiQuotaStatus | null>(null);
+  const [recommendationError, setRecommendationError] = useState<string | null>(null);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const [recommendationResult, setRecommendationResult] =
+    useState<ResetRecommendationResponse | null>(null);
+  const [intent, setIntent] = useState("");
+  const [availableMinutes, setAvailableMinutes] = useState("10");
+  const [need, setNeed] = useState<ResetRecommendationNeed | "">("");
 
   useEffect(() => {
     if (!session) {
@@ -39,15 +95,30 @@ export default function ResetScreen() {
         setLoading(true);
         setError(null);
 
-        const [dailySnapshot, relaxationTechniques, musicTracks] = await Promise.all([
+        const [dailyResult, relaxationResult, musicResult, quotaResult] = await Promise.allSettled([
           api.wellness.daily(timeZone),
           api.wellness.listRelaxation(),
-          api.wellness.listMusic()
+          api.wellness.listMusic(),
+          api.ai.quota()
         ]);
 
-        setSnapshot(dailySnapshot);
-        setRelaxation(relaxationTechniques);
-        setMusic(musicTracks);
+        if (dailyResult.status === "fulfilled") {
+          setSnapshot(dailyResult.value);
+        } else {
+          throw dailyResult.reason;
+        }
+
+        if (relaxationResult.status === "fulfilled") {
+          setRelaxation(relaxationResult.value);
+        }
+
+        if (musicResult.status === "fulfilled") {
+          setMusic(musicResult.value);
+        }
+
+        if (quotaResult.status === "fulfilled") {
+          setQuota(quotaResult.value);
+        }
       } catch (unknownError) {
         const apiError = unknownError as ApiError;
         setError(apiError.message || "Unable to load wellness content.");
@@ -57,9 +128,45 @@ export default function ResetScreen() {
     })();
   }, [api, session]);
 
+  const resetAvailability = quota?.features.user_reset_recommendation ?? null;
+  const recommendationDisabled =
+    recommendationLoading ||
+    !intent.trim() ||
+    !resetAvailability ||
+    resetAvailability.status !== "available";
+
+  async function generateRecommendations() {
+    if (recommendationDisabled) {
+      return;
+    }
+
+    try {
+      setRecommendationLoading(true);
+      setRecommendationError(null);
+
+      const response = await api.ai.resetRecommendations({
+        intent: intent.trim(),
+        availableMinutes: Number(availableMinutes || "0"),
+        need: need || null
+      });
+
+      setRecommendationResult(response);
+      setQuota(response.quota);
+    } catch (unknownError) {
+      const apiError = unknownError as ApiError;
+      setRecommendationError(apiError.message || "Unable to generate reset recommendations.");
+      setRecommendationResult(null);
+    } finally {
+      setRecommendationLoading(false);
+    }
+  }
+
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ gap: 16, paddingBottom: 24 }}
+      >
         <Surface>
           <SectionTitle
             eyebrow="Reset"
@@ -72,6 +179,143 @@ export default function ResetScreen() {
             </Text>
           ) : null}
           {error ? <Text style={{ color: "#A94442", marginTop: 8 }}>{error}</Text> : null}
+        </Surface>
+
+        <Surface>
+          <SectionTitle
+            eyebrow="AI recommendations"
+            title="Get a faster reset suggestion"
+            subtitle="AI only ranks the published relaxation and music already available in your app."
+          />
+          <Text style={{ color: "#607084", marginBottom: 12 }}>{formatQuotaCopy(quota)}</Text>
+          {resetAvailability ? (
+            <Text style={{ color: resetAvailability.status === "available" ? "#607084" : "#A94442" }}>
+              {resetAvailability.message}
+            </Text>
+          ) : null}
+          {recommendationError ? (
+            <Text style={{ color: "#A94442", marginTop: 10 }}>{recommendationError}</Text>
+          ) : null}
+          <View style={{ gap: 12, marginTop: 14 }}>
+            <TextField
+              onChangeText={setIntent}
+              placeholder="How do you want to feel, like calmer, clearer, or ready for sleep?"
+              value={intent}
+            />
+            <TextField
+              keyboardType="numeric"
+              onChangeText={setAvailableMinutes}
+              placeholder="Available minutes"
+              value={availableMinutes}
+            />
+            <View style={{ gap: 8 }}>
+              <Text style={{ color: "#607084", fontWeight: "700" }}>Need</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+                {resetNeeds.map((option) => (
+                  <ChoiceChip
+                    key={option || "any"}
+                    label={option || "Any"}
+                    onPress={() => setNeed(option)}
+                    selected={need === option}
+                  />
+                ))}
+              </View>
+            </View>
+            <View style={{ gap: 10 }}>
+              <ActionButton
+                disabled={recommendationDisabled}
+                label={recommendationLoading ? "Generating..." : "Recommend a reset"}
+                onPress={() => void generateRecommendations()}
+              />
+              <ActionButton
+                label="Clear AI inputs"
+                onPress={() => {
+                  setIntent("");
+                  setAvailableMinutes("10");
+                  setNeed("");
+                  setRecommendationError(null);
+                  setRecommendationResult(null);
+                }}
+                variant="secondary"
+              />
+            </View>
+          </View>
+
+          {recommendationResult ? (
+            <View style={{ gap: 12, marginTop: 16 }}>
+              {recommendationResult.relaxation ? (
+                <Surface compact>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A" }}>
+                    AI relaxation pick
+                  </Text>
+                  <View style={{ gap: 8, marginTop: 8 }}>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                      {recommendationResult.relaxation.technique.title}
+                    </Text>
+                    <Text style={{ color: "#607084" }}>
+                      {recommendationResult.relaxation.explanation}
+                    </Text>
+                    <Text style={{ color: "#607084" }}>
+                      {formatMinutesLabel(
+                        recommendationResult.relaxation.technique.estimatedDurationMinutes
+                      )}
+                    </Text>
+                  </View>
+                  <View style={{ marginTop: 14 }}>
+                    <ActionButton
+                      label="Open technique"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/relaxation/[techniqueId]",
+                          params: {
+                            techniqueId: recommendationResult.relaxation?.techniqueId ?? ""
+                          }
+                        } as never)
+                      }
+                    />
+                  </View>
+                </Surface>
+              ) : null}
+
+              {recommendationResult.music ? (
+                <Surface compact>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A" }}>
+                    AI music pick
+                  </Text>
+                  <View style={{ gap: 8, marginTop: 8 }}>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                      {recommendationResult.music.track.title}
+                    </Text>
+                    <Text style={{ color: "#607084" }}>{recommendationResult.music.explanation}</Text>
+                    <Text style={{ color: "#607084" }}>
+                      {recommendationResult.music.track.artistName} •{" "}
+                      {formatDurationLabel(recommendationResult.music.track.durationSeconds)}
+                    </Text>
+                  </View>
+                  <View style={{ marginTop: 14 }}>
+                    <ActionButton
+                      label="Open player"
+                      onPress={() =>
+                        router.push({
+                          pathname: "/music/[trackId]",
+                          params: { trackId: recommendationResult.music?.trackId ?? "" }
+                        } as never)
+                      }
+                    />
+                  </View>
+                </Surface>
+              ) : null}
+
+              {!recommendationResult.relaxation && !recommendationResult.music ? (
+                <Surface compact>
+                  <Text style={{ color: "#607084" }}>
+                    AI could not find a strong reset match yet. Try a clearer intent or different
+                    duration.
+                  </Text>
+                </Surface>
+              ) : null}
+            </View>
+          ) : null}
         </Surface>
 
         <Surface>
@@ -162,9 +406,7 @@ export default function ResetScreen() {
             ))}
             {!loading && relaxation.length === 0 ? (
               <Surface compact>
-                <Text style={{ color: "#607084" }}>
-                  No relaxation techniques are published yet.
-                </Text>
+                <Text style={{ color: "#607084" }}>No relaxation techniques are published yet.</Text>
               </Surface>
             ) : null}
           </View>
@@ -201,9 +443,7 @@ export default function ResetScreen() {
             ))}
             {!loading && music.length === 0 ? (
               <Surface compact>
-                <Text style={{ color: "#607084" }}>
-                  No music tracks are published yet.
-                </Text>
+                <Text style={{ color: "#607084" }}>No music tracks are published yet.</Text>
               </Surface>
             ) : null}
           </View>

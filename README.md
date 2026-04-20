@@ -10,8 +10,10 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 - Phase 1 auth, signup, fitness, and coach workspace is now runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
-- repo-level `lint`, `typecheck`, and `build` are green on the current Phase 3 branch baseline
+- Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented and repo-validated across `apps/api`, `apps/admin`, and `apps/mobile`
+- repo-level `lint`, `typecheck`, and `build` are green on the current Phase 4 branch baseline
 - live Stripe and Razorpay acceptance still requires real provider credentials plus webhook delivery
+- live Gemini responses still require a real `GEMINI_API_KEY`, but the platform stays usable when AI is unavailable
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
 
@@ -19,8 +21,8 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 
 - `apps/mobile`: mobile consumer app with signup, login, workouts, session flow, and history
 - `apps/web`: consumer website with live auth, store, account, and internal checkout bridge routes
-- `apps/admin`: admin and coach portal with content, users, approvals, coaching workspace, and commerce workspace
-- `apps/api`: NestJS backend with Prisma-backed auth, fitness, wellness, commerce, subscriptions, and billing webhook endpoints
+- `apps/admin`: admin and coach portal with content, users, approvals, coaching workspace, commerce workspace, and AI draft tools
+- `apps/api`: NestJS backend with Prisma-backed auth, fitness, wellness, commerce, subscriptions, AI quota and recommendation endpoints, and billing webhook endpoints
 - `packages/brand`: brand registry and the first `MoveYOU` brand pack
 - `packages/types`: shared platform contracts
 - `packages/config`: deployment and platform defaults
@@ -52,6 +54,17 @@ Commerce provider variables for real checkout:
 - `RAZORPAY_WEBHOOK_SECRET`
 
 Without those values, the catalog UI can still render locally, but real checkout session creation and webhook reconciliation will not complete.
+
+AI variables for live Gemini calls:
+
+- `GEMINI_API_KEY`
+- `GEMINI_MODEL`
+- `AI_ENABLED`
+- `AI_ADMIN_DRAFTS_ENABLED`
+- `AI_USER_WORKOUT_RECOMMENDATIONS_ENABLED`
+- `AI_USER_RESET_RECOMMENDATIONS_ENABLED`
+
+Without a valid Gemini key, the rest of the platform still runs and AI actions return graceful unavailable or disabled states.
 
 Start everything:
 
@@ -94,8 +107,8 @@ Invoke-RestMethod `
 
 - web: `/`, `/login`, `/account`, `/store`, `/checkout/launch`, `/checkout/success`, `/checkout/cancel`
 - admin: `/`, `/login`, `/request-access`, `/dashboard`, `/users`, `/content`, `/commerce`
-- api: `GET /api/v1/health`, auth endpoints, workout and wellness endpoints, store endpoints, admin commerce endpoints, and billing webhook endpoints
-- mobile: sign-in, sign-up, home, workouts, workout detail, live workout session, progress, reset, store tab, and checkout return route
+- api: `GET /api/v1/health`, auth endpoints, workout and wellness endpoints, AI quota and recommendation endpoints, store endpoints, admin commerce endpoints, and billing webhook endpoints
+- mobile: sign-in, sign-up, home, workouts, workout detail, live workout session, progress, reset, store tab, checkout return route, and AI recommendation panels in workouts and reset
 
 ## Platform Defaults
 
@@ -112,6 +125,7 @@ Invoke-RestMethod `
 - Phase 1: accepted and runtime-validated
 - Phase 2: implemented and locally validated
 - Phase 3: implemented in code and repo-validated; live provider acceptance pending credentials and webhook testing
+- Phase 4: implemented and repo-validated; live Gemini acceptance pending `GEMINI_API_KEY`
 
 ## Git Workflow
 

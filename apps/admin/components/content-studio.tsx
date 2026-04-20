@@ -2,12 +2,15 @@
 
 import { createApiClient } from "@platform/sdk";
 import type {
+  AdminAiQuotaStatus,
   ApiError,
   DailyPanchangRecord,
   DailyQuoteRecord,
   MusicTrackListItem,
+  RelaxationDraftRequest,
   RelaxationTechniqueListItem,
   SaveWorkoutRequest,
+  WorkoutDraftRequest,
   WorkoutDifficulty,
   WorkoutListItem
 } from "@platform/types";
@@ -43,6 +46,21 @@ interface RelaxationFormState {
   estimatedDurationMinutes: string;
   coverImageUrl: string;
   steps: RelaxationStepFormState[];
+}
+
+interface WorkoutDraftFormState {
+  prompt: string;
+  durationMinutes: string;
+  difficulty: WorkoutDifficulty;
+  category: string;
+  focusTags: string;
+}
+
+interface RelaxationDraftFormState {
+  prompt: string;
+  estimatedDurationMinutes: string;
+  category: string;
+  focusTags: string;
 }
 
 interface MusicFormState {
@@ -122,6 +140,25 @@ function createRelaxationForm(): RelaxationFormState {
   };
 }
 
+function createWorkoutDraftForm(): WorkoutDraftFormState {
+  return {
+    prompt: "",
+    durationMinutes: "20",
+    difficulty: "beginner",
+    category: "",
+    focusTags: ""
+  };
+}
+
+function createRelaxationDraftForm(): RelaxationDraftFormState {
+  return {
+    prompt: "",
+    estimatedDurationMinutes: "10",
+    category: "",
+    focusTags: ""
+  };
+}
+
 function createMusicForm(): MusicFormState {
   return {
     title: "",
@@ -166,6 +203,29 @@ function formatSecondsLabel(seconds: number) {
   return remainder > 0 ? `${minutes}m ${remainder}s` : `${minutes}m`;
 }
 
+function parseTagField(value: string) {
+  return value
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter(Boolean);
+}
+
+function formatAiStatusLabel(status: AdminAiQuotaStatus["status"]) {
+  if (status === "available") {
+    return "Available";
+  }
+
+  if (status === "quota_exceeded") {
+    return "Quota hit";
+  }
+
+  if (status === "disabled") {
+    return "Disabled";
+  }
+
+  return "Unavailable";
+}
+
 export function ContentStudio() {
   const { session } = useAdminSession();
   const api = useMemo(
@@ -185,6 +245,10 @@ export function ContentStudio() {
 
   const [workoutForm, setWorkoutForm] = useState<WorkoutFormState>(createWorkoutForm);
   const [relaxationForm, setRelaxationForm] = useState<RelaxationFormState>(createRelaxationForm);
+  const [workoutDraftForm, setWorkoutDraftForm] = useState<WorkoutDraftFormState>(createWorkoutDraftForm);
+  const [relaxationDraftForm, setRelaxationDraftForm] = useState<RelaxationDraftFormState>(
+    createRelaxationDraftForm
+  );
   const [musicForm, setMusicForm] = useState<MusicFormState>(createMusicForm);
   const [quoteForm, setQuoteForm] = useState<QuoteFormState>(createQuoteForm);
   const [panchangForm, setPanchangForm] = useState<PanchangFormState>(createPanchangForm);
@@ -198,6 +262,10 @@ export function ContentStudio() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aiQuota, setAiQuota] = useState<AdminAiQuotaStatus | null>(null);
+  const [aiDraftError, setAiDraftError] = useState<string | null>(null);
+  const [aiDraftSuccess, setAiDraftSuccess] = useState<string | null>(null);
+  const [generatingDraft, setGeneratingDraft] = useState<"workout" | "relaxation" | null>(null);
 
   useEffect(() => {
     if (!session || session.user.role !== "admin") {
@@ -217,19 +285,32 @@ export function ContentStudio() {
       setLoading(true);
       setError(null);
 
-      const [nextWorkouts, nextRelaxation, nextMusic, nextQuotes, nextPanchang] = await Promise.all([
-        api.adminWorkouts.list(),
-        api.adminWellness.relaxation.list(),
-        api.adminWellness.music.list(),
-        api.adminWellness.dailyQuotes.list(),
-        api.adminWellness.panchang.list()
+      const [contentResult, aiQuotaResult] = await Promise.allSettled([
+        Promise.all([
+          api.adminWorkouts.list(),
+          api.adminWellness.relaxation.list(),
+          api.adminWellness.music.list(),
+          api.adminWellness.dailyQuotes.list(),
+          api.adminWellness.panchang.list()
+        ]),
+        api.ai.adminQuota()
       ]);
+
+      if (contentResult.status === "rejected") {
+        throw contentResult.reason;
+      }
+
+      const [nextWorkouts, nextRelaxation, nextMusic, nextQuotes, nextPanchang] = contentResult.value;
 
       setWorkouts(nextWorkouts);
       setRelaxation(nextRelaxation);
       setMusic(nextMusic);
       setQuotes(nextQuotes);
       setPanchangEntries(nextPanchang);
+
+      if (aiQuotaResult.status === "fulfilled") {
+        setAiQuota(aiQuotaResult.value);
+      }
     } catch (unknownError) {
       setError((unknownError as ApiError).message || "Unable to load content studio.");
     } finally {
@@ -240,11 +321,13 @@ export function ContentStudio() {
   function resetWorkoutForm() {
     setEditingWorkoutId(null);
     setWorkoutForm(createWorkoutForm());
+    setAiDraftSuccess(null);
   }
 
   function resetRelaxationForm() {
     setEditingRelaxationId(null);
     setRelaxationForm(createRelaxationForm());
+    setAiDraftSuccess(null);
   }
 
   function resetMusicForm() {
@@ -404,6 +487,106 @@ export function ContentStudio() {
       notes: entry.notes ?? ""
     });
     setError(null);
+  }
+
+  async function handleWorkoutDraftGenerate() {
+    if (!workoutDraftForm.prompt.trim()) {
+      setAiDraftError("Add a short workout prompt before generating a draft.");
+      return;
+    }
+
+    setGeneratingDraft("workout");
+    setAiDraftError(null);
+    setAiDraftSuccess(null);
+
+    try {
+      const focusTags = parseTagField(workoutDraftForm.focusTags);
+      const payload: WorkoutDraftRequest = {
+        prompt: workoutDraftForm.prompt.trim(),
+        durationMinutes: workoutDraftForm.durationMinutes
+          ? Number(workoutDraftForm.durationMinutes)
+          : null,
+        difficulty: workoutDraftForm.difficulty,
+        category: workoutDraftForm.category || null,
+        focusTags: focusTags.length > 0 ? focusTags : undefined
+      };
+      const response = await api.ai.createWorkoutDraft(payload);
+
+      setEditingWorkoutId(null);
+      setWorkoutForm({
+        title: response.draft.title,
+        description: response.draft.description,
+        difficulty: response.draft.difficulty,
+        durationMinutes: String(response.draft.durationMinutes),
+        category: response.draft.category ?? "",
+        tags: response.draft.tags.join(", "),
+        exercises: response.draft.exercises.map((exercise, index) => ({
+          name: exercise.name,
+          instruction: exercise.instruction ?? "",
+          repTarget: exercise.repTarget ?? "",
+          timeTargetSeconds: exercise.timeTargetSeconds ?? null,
+          distanceTargetMeters: exercise.distanceTargetMeters ?? null,
+          restSeconds: exercise.restSeconds ?? null,
+          sequence: exercise.sequence || index + 1
+        }))
+      });
+      setAiQuota(response.quota);
+      setAiDraftSuccess("AI workout draft loaded into the form. Review and save when ready.");
+    } catch (unknownError) {
+      setAiDraftError((unknownError as ApiError).message || "Unable to generate workout draft.");
+      void api.ai.adminQuota().then(setAiQuota).catch(() => undefined);
+    } finally {
+      setGeneratingDraft(null);
+    }
+  }
+
+  async function handleRelaxationDraftGenerate() {
+    if (!relaxationDraftForm.prompt.trim()) {
+      setAiDraftError("Add a short relaxation prompt before generating a draft.");
+      return;
+    }
+
+    setGeneratingDraft("relaxation");
+    setAiDraftError(null);
+    setAiDraftSuccess(null);
+
+    try {
+      const focusTags = parseTagField(relaxationDraftForm.focusTags);
+      const payload: RelaxationDraftRequest = {
+        prompt: relaxationDraftForm.prompt.trim(),
+        estimatedDurationMinutes: relaxationDraftForm.estimatedDurationMinutes
+          ? Number(relaxationDraftForm.estimatedDurationMinutes)
+          : null,
+        category: relaxationDraftForm.category || null,
+        focusTags: focusTags.length > 0 ? focusTags : undefined
+      };
+      const response = await api.ai.createRelaxationDraft(payload);
+
+      setEditingRelaxationId(null);
+      setRelaxationForm({
+        title: response.draft.title,
+        description: response.draft.description,
+        category: response.draft.category ?? "",
+        tags: response.draft.tags.join(", "),
+        estimatedDurationMinutes: String(response.draft.estimatedDurationMinutes),
+        coverImageUrl: response.draft.coverImageUrl ?? "",
+        steps: response.draft.steps.map((step, index) => ({
+          title: step.title,
+          instruction: step.instruction,
+          durationSeconds: String(step.durationSeconds),
+          sequence: step.sequence || index + 1
+        }))
+      });
+      setAiQuota(response.quota);
+      setAiDraftSuccess("AI relaxation draft loaded into the form. Review and save when ready.");
+    } catch (unknownError) {
+      setAiDraftError(
+        (unknownError as ApiError).message || "Unable to generate relaxation draft."
+      );
+      void api.ai.adminQuota().then(setAiQuota).catch(() => undefined);
+    } finally {
+      setGeneratingDraft(null);
+    }
   }
 
   async function handleWorkoutSubmit(event: FormEvent) {
@@ -682,6 +865,14 @@ export function ContentStudio() {
   }[currentSection];
   const currentPublishedCount = currentRecords.filter((record) => record.status === "published").length;
   const currentDraftCount = currentRecords.filter((record) => record.status === "draft").length;
+  const workoutDraftAvailability = aiQuota?.features.admin_workout_draft ?? null;
+  const relaxationDraftAvailability = aiQuota?.features.admin_relaxation_draft ?? null;
+  const currentAiAvailability =
+    currentSection === "workouts"
+      ? workoutDraftAvailability
+      : currentSection === "relaxation"
+        ? relaxationDraftAvailability
+        : null;
 
   return (
     <div className="stack">
@@ -690,13 +881,13 @@ export function ContentStudio() {
           <p className="eyebrow">Content Studio</p>
           <h1 className="display-title">Manage workouts and wellness content in one place.</h1>
           <p className="display-copy">
-            Phase 2 keeps the existing workout studio intact and expands this admin surface with guided relaxation, music, daily quote, and panchang publishing.
+            Phase 4 keeps the existing studio intact and adds admin AI drafts for workouts and relaxation, while every generated result still stays editable before you save anything.
           </p>
           {error ? <p className="error-banner">{error}</p> : null}
         </div>
         <SectionCard
           title="Current section"
-          description="Published content is visible to mobile users. Drafts remain internal until you publish them."
+          description="Published content is visible to mobile users. Drafts remain internal until you publish them, including AI-generated drafts."
         >
           <div className="stack-tight">
             <div className="pill">
@@ -708,6 +899,24 @@ export function ContentStudio() {
             <div className="pill">
               <strong>Drafts</strong> {currentDraftCount}
             </div>
+            {aiQuota ? (
+              <>
+                <div className="pill">
+                  <strong>AI status</strong> {formatAiStatusLabel(aiQuota.status)}
+                </div>
+                <div className="pill">
+                  <strong>Actions left</strong> {aiQuota.remainingActions}
+                </div>
+                <div className="pill">
+                  <strong>Brand cap left</strong> {aiQuota.remainingBrandActions}
+                </div>
+              </>
+            ) : null}
+            {currentAiAvailability ? (
+              <div className="pill">
+                <strong>Current AI</strong> {currentAiAvailability.message}
+              </div>
+            ) : null}
           </div>
         </SectionCard>
       </section>
@@ -719,7 +928,11 @@ export function ContentStudio() {
             <button
               className={`button ${section.key === currentSection ? "button-primary" : "button-secondary"}`}
               key={section.key}
-              onClick={() => setCurrentSection(section.key)}
+              onClick={() => {
+                setCurrentSection(section.key);
+                setAiDraftError(null);
+                setAiDraftSuccess(null);
+              }}
               type="button"
             >
               {section.label}
@@ -733,6 +946,123 @@ export function ContentStudio() {
           <div className="admin-card">
             <p className="eyebrow">{editingWorkoutId ? "Edit workout" : "New workout"}</p>
             <form className="stack-tight" onSubmit={handleWorkoutSubmit}>
+              <div className="exercise-card">
+                <div className="button-row">
+                  <div>
+                    <strong>Generate AI draft</strong>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      Drafts fill the form only. Nothing is saved or published automatically.
+                    </p>
+                  </div>
+                  <span className="status">
+                    {workoutDraftAvailability
+                      ? formatAiStatusLabel(workoutDraftAvailability.status)
+                      : "Loading"}
+                  </span>
+                </div>
+                {aiDraftError ? <p className="error-banner">{aiDraftError}</p> : null}
+                {aiDraftSuccess ? <p className="success-banner">{aiDraftSuccess}</p> : null}
+                <div className="field">
+                  <label htmlFor="workout-draft-prompt">Prompt</label>
+                  <textarea
+                    id="workout-draft-prompt"
+                    onChange={(event) =>
+                      setWorkoutDraftForm((current) => ({ ...current, prompt: event.target.value }))
+                    }
+                    placeholder="Example: Build a low-impact 25 minute morning mobility flow for stiff shoulders and hips."
+                    rows={4}
+                    value={workoutDraftForm.prompt}
+                  />
+                </div>
+                <div className="form-grid">
+                  <div className="field">
+                    <label htmlFor="workout-draft-duration">Target duration (minutes)</label>
+                    <input
+                      id="workout-draft-duration"
+                      onChange={(event) =>
+                        setWorkoutDraftForm((current) => ({
+                          ...current,
+                          durationMinutes: event.target.value
+                        }))
+                      }
+                      type="number"
+                      value={workoutDraftForm.durationMinutes}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="workout-draft-difficulty">Difficulty</label>
+                    <select
+                      id="workout-draft-difficulty"
+                      onChange={(event) =>
+                        setWorkoutDraftForm((current) => ({
+                          ...current,
+                          difficulty: event.target.value as WorkoutDifficulty
+                        }))
+                      }
+                      value={workoutDraftForm.difficulty}
+                    >
+                      <option value="beginner">beginner</option>
+                      <option value="intermediate">intermediate</option>
+                      <option value="advanced">advanced</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="form-grid">
+                  <div className="field">
+                    <label htmlFor="workout-draft-category">Category</label>
+                    <input
+                      id="workout-draft-category"
+                      onChange={(event) =>
+                        setWorkoutDraftForm((current) => ({
+                          ...current,
+                          category: event.target.value
+                        }))
+                      }
+                      value={workoutDraftForm.category}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="workout-draft-tags">Focus tags</label>
+                    <input
+                      id="workout-draft-tags"
+                      onChange={(event) =>
+                        setWorkoutDraftForm((current) => ({
+                          ...current,
+                          focusTags: event.target.value
+                        }))
+                      }
+                      placeholder="mobility, posture, low impact"
+                      value={workoutDraftForm.focusTags}
+                    />
+                  </div>
+                </div>
+                <div className="button-row">
+                  <button
+                    className="button button-primary"
+                    disabled={
+                      generatingDraft === "workout" ||
+                      !workoutDraftAvailability ||
+                      workoutDraftAvailability.status !== "available"
+                    }
+                    onClick={() => void handleWorkoutDraftGenerate()}
+                    type="button"
+                  >
+                    {generatingDraft === "workout" ? "Generating..." : "Generate AI Draft"}
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    onClick={() => {
+                      setWorkoutDraftForm(createWorkoutDraftForm());
+                      setAiDraftError(null);
+                      setAiDraftSuccess(null);
+                    }}
+                    type="button"
+                  >
+                    Reset AI prompt
+                  </button>
+                </div>
+              </div>
+
               <div className="field">
                 <label htmlFor="workout-title">Title</label>
                 <input
@@ -997,6 +1327,107 @@ export function ContentStudio() {
           <div className="admin-card">
             <p className="eyebrow">{editingRelaxationId ? "Edit technique" : "New technique"}</p>
             <form className="stack-tight" onSubmit={handleRelaxationSubmit}>
+              <div className="exercise-card">
+                <div className="button-row">
+                  <div>
+                    <strong>Generate AI draft</strong>
+                    <p className="muted" style={{ marginTop: 6 }}>
+                      Use AI to propose a guided relaxation flow, then edit it before saving.
+                    </p>
+                  </div>
+                  <span className="status">
+                    {relaxationDraftAvailability
+                      ? formatAiStatusLabel(relaxationDraftAvailability.status)
+                      : "Loading"}
+                  </span>
+                </div>
+                {aiDraftError ? <p className="error-banner">{aiDraftError}</p> : null}
+                {aiDraftSuccess ? <p className="success-banner">{aiDraftSuccess}</p> : null}
+                <div className="field">
+                  <label htmlFor="relaxation-draft-prompt">Prompt</label>
+                  <textarea
+                    id="relaxation-draft-prompt"
+                    onChange={(event) =>
+                      setRelaxationDraftForm((current) => ({
+                        ...current,
+                        prompt: event.target.value
+                      }))
+                    }
+                    placeholder="Example: Create a 12 minute breathing and grounding reset for people feeling overloaded after work."
+                    rows={4}
+                    value={relaxationDraftForm.prompt}
+                  />
+                </div>
+                <div className="form-grid">
+                  <div className="field">
+                    <label htmlFor="relaxation-draft-duration">Target duration (minutes)</label>
+                    <input
+                      id="relaxation-draft-duration"
+                      onChange={(event) =>
+                        setRelaxationDraftForm((current) => ({
+                          ...current,
+                          estimatedDurationMinutes: event.target.value
+                        }))
+                      }
+                      type="number"
+                      value={relaxationDraftForm.estimatedDurationMinutes}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="relaxation-draft-category">Category</label>
+                    <input
+                      id="relaxation-draft-category"
+                      onChange={(event) =>
+                        setRelaxationDraftForm((current) => ({
+                          ...current,
+                          category: event.target.value
+                        }))
+                      }
+                      value={relaxationDraftForm.category}
+                    />
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="relaxation-draft-tags">Focus tags</label>
+                  <input
+                    id="relaxation-draft-tags"
+                    onChange={(event) =>
+                      setRelaxationDraftForm((current) => ({
+                        ...current,
+                        focusTags: event.target.value
+                      }))
+                    }
+                    placeholder="breathing, calm, grounding"
+                    value={relaxationDraftForm.focusTags}
+                  />
+                </div>
+                <div className="button-row">
+                  <button
+                    className="button button-primary"
+                    disabled={
+                      generatingDraft === "relaxation" ||
+                      !relaxationDraftAvailability ||
+                      relaxationDraftAvailability.status !== "available"
+                    }
+                    onClick={() => void handleRelaxationDraftGenerate()}
+                    type="button"
+                  >
+                    {generatingDraft === "relaxation" ? "Generating..." : "Generate AI Draft"}
+                  </button>
+                  <button
+                    className="button button-secondary"
+                    onClick={() => {
+                      setRelaxationDraftForm(createRelaxationDraftForm());
+                      setAiDraftError(null);
+                      setAiDraftSuccess(null);
+                    }}
+                    type="button"
+                  >
+                    Reset AI prompt
+                  </button>
+                </div>
+              </div>
+
               <div className="field">
                 <label htmlFor="relaxation-title">Title</label>
                 <input

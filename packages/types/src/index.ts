@@ -14,6 +14,22 @@ export type CheckoutKind = "cart" | "subscription";
 export type CheckoutSurface = "web" | "mobile";
 export type OrderStatus = "pending" | "paid" | "cancelled" | "payment_failed";
 export type SubscriptionStatus = "pending" | "active" | "cancelled" | "payment_failed";
+export type AiProviderId = "gemini";
+export type AiFeatureKey =
+  | "user_workout_recommendation"
+  | "user_reset_recommendation"
+  | "admin_workout_draft"
+  | "admin_relaxation_draft";
+export type AiUsageStatus =
+  | "succeeded"
+  | "quota_blocked"
+  | "provider_unavailable"
+  | "disabled"
+  | "failed";
+export type AiApiErrorCode =
+  | "AI_QUOTA_EXCEEDED"
+  | "AI_TEMPORARILY_UNAVAILABLE"
+  | "AI_DISABLED";
 export type AiAvailabilityStatus =
   | "available"
   | "quota_exceeded"
@@ -116,6 +132,13 @@ export interface PlatformConfig {
     mode: "free_tier_only";
     fallback: "disable";
     userExperience: "recommendations_only";
+    provider: AiProviderId;
+    enabled: boolean;
+    features: {
+      adminDrafts: boolean;
+      userWorkoutRecommendations: boolean;
+      userResetRecommendations: boolean;
+    };
   };
 }
 
@@ -343,10 +366,50 @@ export interface AiQuotaPolicy {
   maxTokensPerDay: number;
 }
 
+export interface AdminAiQuotaPolicy {
+  maxActionsPerDay: number;
+  maxBrandActionsPerDay: number;
+  mode: "free_tier_only";
+  fallback: "disable";
+}
+
 export interface AiQuotaStatus {
   status: AiAvailabilityStatus;
   remainingRequests: number;
   remainingTokens: number;
+}
+
+export interface AiAvailability {
+  feature: AiFeatureKey;
+  status: AiAvailabilityStatus;
+  code: AiApiErrorCode | null;
+  message: string;
+}
+
+export interface UserAiQuotaStatus {
+  provider: AiProviderId;
+  plan: UserPlan;
+  status: AiAvailabilityStatus;
+  usedRequests: number;
+  remainingRequests: number;
+  usedTokens: number;
+  remainingTokens: number;
+  resetAt: string;
+  features: Record<
+    "user_workout_recommendation" | "user_reset_recommendation",
+    AiAvailability
+  >;
+}
+
+export interface AdminAiQuotaStatus {
+  provider: AiProviderId;
+  status: AiAvailabilityStatus;
+  usedActions: number;
+  remainingActions: number;
+  usedBrandActions: number;
+  remainingBrandActions: number;
+  resetAt: string;
+  features: Record<"admin_workout_draft" | "admin_relaxation_draft", AiAvailability>;
 }
 
 export interface CurrentUser {
@@ -552,6 +615,54 @@ export interface TodayWellnessSnapshot {
   panchang: DailyPanchangRecord | null;
 }
 
+export interface WorkoutRecommendationRequest {
+  goal: string;
+  availableMinutes: number;
+  preferredDifficulty: WorkoutDifficulty;
+  focusTags?: string[];
+}
+
+export interface WorkoutRecommendationItem {
+  workoutId: string;
+  explanation: string;
+  workout: WorkoutListItem;
+}
+
+export interface WorkoutRecommendationResponse {
+  provider: AiProviderId;
+  generatedAt: string;
+  quota: UserAiQuotaStatus;
+  recommendations: WorkoutRecommendationItem[];
+}
+
+export type ResetRecommendationNeed = "calm" | "focus" | "sleep" | "recovery";
+
+export interface ResetRecommendationRequest {
+  intent: string;
+  availableMinutes: number;
+  need?: ResetRecommendationNeed | null;
+}
+
+export interface ResetRecommendationResponse {
+  provider: AiProviderId;
+  generatedAt: string;
+  quota: UserAiQuotaStatus;
+  relaxation:
+    | {
+        techniqueId: string;
+        explanation: string;
+        technique: RelaxationTechniqueListItem;
+      }
+    | null;
+  music:
+    | {
+        trackId: string;
+        explanation: string;
+        track: MusicTrackListItem;
+      }
+    | null;
+}
+
 export interface WorkoutAssignmentRecord {
   id: string;
   workoutId: string;
@@ -610,6 +721,35 @@ export interface SaveWorkoutRequest {
     restSeconds?: number | null;
     sequence: number;
   }>;
+}
+
+export interface WorkoutDraftRequest {
+  prompt: string;
+  durationMinutes?: number | null;
+  difficulty?: WorkoutDifficulty | null;
+  category?: string | null;
+  focusTags?: string[];
+}
+
+export interface WorkoutDraftResponse {
+  provider: AiProviderId;
+  generatedAt: string;
+  quota: AdminAiQuotaStatus;
+  draft: SaveWorkoutRequest;
+}
+
+export interface RelaxationDraftRequest {
+  prompt: string;
+  estimatedDurationMinutes?: number | null;
+  category?: string | null;
+  focusTags?: string[];
+}
+
+export interface RelaxationDraftResponse {
+  provider: AiProviderId;
+  generatedAt: string;
+  quota: AdminAiQuotaStatus;
+  draft: SaveRelaxationTechniqueRequest;
 }
 
 export interface WorkoutSessionExerciseRecord {

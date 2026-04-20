@@ -12,7 +12,8 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Phase 1 is accepted and runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
-- Root `lint`, `typecheck`, and `build` are green on the current Phase 3 branch baseline
+- Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented in code across `apps/api`, `apps/admin`, and `apps/mobile`
+- Root `lint`, `typecheck`, and `build` are green on the current Phase 4 branch baseline
 - Live Stripe and Razorpay acceptance still requires real provider credentials and webhook delivery
 
 ## Stable Platform Decisions
@@ -35,6 +36,7 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
   - graceful disable on quota exhaustion
   - admin AI for draft generation only in v1
   - user AI for recommendation flows only in v1
+  - current provider implementation: Gemini direct behind the internal AI adapter
 
 ## Delivery Order
 
@@ -260,13 +262,26 @@ Add non-critical AI in a way that never blocks the rest of the product.
 - AI owner: provider adapter, usage ledger, quotas, availability
 - admin owner: draft-generation entry points
 - mobile owner: recommendation flows
-- web owner: optional lightweight recommendation entry points
+- web owner: no Phase 4 AI scope; keep web AI out until later reprioritization
 
 ### Acceptance
 
 - admin AI and user AI both respect quota limits
 - quota exhaustion and provider failure disable AI gracefully
 - the rest of the product stays usable without AI
+
+### Acceptance Status
+
+Phase 4 is implemented and repo-validated on the current baseline, including:
+
+- shared AI contracts, env config, feature flags, and SDK methods
+- Prisma-backed AI usage ledger with UTC-day quota enforcement
+- Gemini direct provider adapter with normalized error handling
+- user AI quota route plus workout and reset recommendation endpoints
+- admin AI quota route plus workout and relaxation draft endpoints
+- admin dashboard quota visibility and content-studio AI draft panels
+- mobile workout and reset recommendation panels that continue to work gracefully when AI is disabled, unavailable, or out of quota
+- root `lint`, `typecheck`, and `build`
 
 ## Phase 5: Hardening And Release Prep
 
@@ -310,4 +325,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The immediate next step is **Phase 3 live provider validation** for Stripe and Razorpay checkout plus webhook delivery. After that, the next implementation milestone is **Phase 4: AI + Quota Layer**.
+The immediate parallel follow-up remains **Phase 3 live provider validation** for Stripe and Razorpay checkout plus webhook delivery. The next implementation milestone after the current validated code baseline is **Phase 5: Hardening and release prep**.

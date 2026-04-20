@@ -29,6 +29,16 @@ function getNumberEnv(name: string, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function getBooleanEnv(name: string, fallback: boolean): boolean {
+  const value = process.env[name];
+
+  if (!value) {
+    return fallback;
+  }
+
+  return ["1", "true", "yes", "on"].includes(value.toLowerCase());
+}
+
 export const runtimeEnv = {
   nodeEnv: getStringEnv("NODE_ENV", "development"),
   activeBrand: getStringEnv("PLATFORM_BRAND", activeBrand.key),
@@ -52,7 +62,16 @@ export const runtimeEnv = {
   stripeWebhookSecret: getStringEnv("STRIPE_WEBHOOK_SECRET", ""),
   razorpayKeyId: getStringEnv("RAZORPAY_KEY_ID", ""),
   razorpayKeySecret: getStringEnv("RAZORPAY_KEY_SECRET", ""),
-  razorpayWebhookSecret: getStringEnv("RAZORPAY_WEBHOOK_SECRET", "")
+  razorpayWebhookSecret: getStringEnv("RAZORPAY_WEBHOOK_SECRET", ""),
+  geminiApiKey: getStringEnv("GEMINI_API_KEY", ""),
+  geminiModel: getStringEnv("GEMINI_MODEL", "gemini-2.0-flash"),
+  aiEnabled: getBooleanEnv("AI_ENABLED", true),
+  aiAdminDraftsEnabled: getBooleanEnv("AI_ADMIN_DRAFTS_ENABLED", true),
+  aiUserWorkoutRecommendationsEnabled: getBooleanEnv(
+    "AI_USER_WORKOUT_RECOMMENDATIONS_ENABLED",
+    true
+  ),
+  aiUserResetRecommendationsEnabled: getBooleanEnv("AI_USER_RESET_RECOMMENDATIONS_ENABLED", true)
 };
 
 export const platformConfig: PlatformConfig = {
@@ -98,6 +117,13 @@ export const platformConfig: PlatformConfig = {
   ai: {
     mode: "free_tier_only",
     fallback: "disable",
-    userExperience: "recommendations_only"
+    userExperience: "recommendations_only",
+    provider: "gemini",
+    enabled: runtimeEnv.aiEnabled,
+    features: {
+      adminDrafts: runtimeEnv.aiAdminDraftsEnabled,
+      userWorkoutRecommendations: runtimeEnv.aiUserWorkoutRecommendationsEnabled,
+      userResetRecommendations: runtimeEnv.aiUserResetRecommendationsEnabled
+    }
   }
 };

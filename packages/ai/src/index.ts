@@ -1,5 +1,5 @@
 import { getBrandPack } from "@platform/brand";
-import type { AiQuotaPolicy, BrandPack, UserPlan } from "@platform/types";
+import type { AdminAiQuotaPolicy, AiQuotaPolicy, BrandPack, UserPlan } from "@platform/types";
 
 export function getUserAiQuotaPolicy(
   plan: UserPlan,
@@ -11,7 +11,9 @@ export function getUserAiQuotaPolicy(
   };
 }
 
-export function getAdminAiQuotaPolicy(brandPack: BrandPack = getBrandPack()) {
+export function getAdminAiQuotaPolicy(
+  brandPack: BrandPack = getBrandPack()
+): AdminAiQuotaPolicy {
   return {
     maxActionsPerDay: brandPack.ai.adminDailyActions,
     maxBrandActionsPerDay: brandPack.ai.brandDailyActions,
@@ -19,4 +21,3 @@ export function getAdminAiQuotaPolicy(brandPack: BrandPack = getBrandPack()) {
     fallback: "disable" as const
   };
 }
-

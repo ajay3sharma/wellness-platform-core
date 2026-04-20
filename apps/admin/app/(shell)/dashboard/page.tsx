@@ -1,11 +1,11 @@
 "use client";
 
 import { createApiClient } from "@platform/sdk";
-import { getAdminAiQuotaPolicy } from "@platform/ai";
+import type { AdminAiQuotaStatus } from "@platform/types";
 import { useEffect, useMemo, useState } from "react";
 import { SectionCard } from "../../../components/section-card";
 import { StatCard } from "../../../components/stat-card";
-import { adminBrand, adminMetadata, adminBasePath } from "../../../lib/brand";
+import { adminMetadata, adminBasePath } from "../../../lib/brand";
 import { useAdminSession } from "../../../lib/session";
 
 interface DashboardSnapshot {
@@ -17,9 +17,35 @@ interface DashboardSnapshot {
   secondaryDetail: string;
 }
 
+function formatAdminAiValue(quota: AdminAiQuotaStatus | null, role: string) {
+  if (role !== "admin") {
+    return "Admin only";
+  }
+
+  if (!quota) {
+    return "...";
+  }
+
+  return `${quota.remainingActions} left`;
+}
+
+function formatAdminAiDetail(quota: AdminAiQuotaStatus | null, role: string) {
+  if (role !== "admin") {
+    return "Coach workspaces stay outside AI authoring in Phase 4.";
+  }
+
+  if (!quota) {
+    return "Loading AI quota and availability.";
+  }
+
+  const workoutStatus = quota.features.admin_workout_draft;
+  const relaxationStatus = quota.features.admin_relaxation_draft;
+
+  return `Brand cap ${quota.remainingBrandActions} left today. Workout drafts are ${workoutStatus.status}; relaxation drafts are ${relaxationStatus.status}.`;
+}
+
 export default function DashboardPage() {
   const { session } = useAdminSession();
-  const quota = getAdminAiQuotaPolicy(adminBrand);
   const api = useMemo(
     () =>
       createApiClient({
@@ -28,6 +54,7 @@ export default function DashboardPage() {
     [session]
   );
   const [snapshot, setSnapshot] = useState<DashboardSnapshot | null>(null);
+  const [aiQuota, setAiQuota] = useState<AdminAiQuotaStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -40,13 +67,18 @@ export default function DashboardPage() {
         setError(null);
 
         if (session.user.role === "admin") {
-          const [users, workouts] = await Promise.all([api.adminUsers.list(), api.adminWorkouts.list()]);
+          const [users, workouts, nextAiQuota] = await Promise.all([
+            api.adminUsers.list(),
+            api.adminWorkouts.list(),
+            api.ai.adminQuota()
+          ]);
           const pendingApprovals = users.filter((user) => user.status === "pending_approval").length;
           const activeCoaches = users.filter(
             (user) => user.role === "coach" && user.status === "active"
           ).length;
           const publishedWorkouts = workouts.filter((workout) => workout.status === "published").length;
           const draftWorkouts = workouts.filter((workout) => workout.status === "draft").length;
+          setAiQuota(nextAiQuota);
 
           setSnapshot({
             primaryCount: `${pendingApprovals}`,
@@ -60,6 +92,7 @@ export default function DashboardPage() {
         }
 
         const coachUsers = await api.coachUsers.list();
+        setAiQuota(null);
         const assignedWorkouts = coachUsers.reduce(
           (total, user) => total + user.assignedWorkouts.length,
           0
@@ -108,8 +141,8 @@ export default function DashboardPage() {
         <div className="stack">
           <StatCard
             label="Admin AI"
-            value={`${quota.maxActionsPerDay} actions/day`}
-            detail={`Brand cap ${quota.maxBrandActionsPerDay}/day, with graceful disable on quota exhaustion.`}
+            value={formatAdminAiValue(aiQuota, session.user.role)}
+            detail={formatAdminAiDetail(aiQuota, session.user.role)}
           />
           <StatCard
             label={snapshot?.primaryLabel ?? "Loading"}
@@ -158,12 +191,12 @@ export default function DashboardPage() {
         </SectionCard>
         <SectionCard
           title="Still next"
-          description="Commerce, subscriptions, AI tooling, and full web parity remain outside the current implemented slice."
+          description="Commerce is live, while web AI, coach-facing AI, and non-critical polish remain outside the current Phase 4 slice."
         >
           <div className="stack-tight">
-            <div className="pill">No commerce flows yet</div>
-            <div className="pill">No subscription billing yet</div>
-            <div className="pill">No AI tooling in Phase 1</div>
+            <div className="pill">No web AI surface yet</div>
+            <div className="pill">No coach AI authoring</div>
+            <div className="pill">No auto-publish from AI drafts</div>
           </div>
         </SectionCard>
       </section>

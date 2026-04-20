@@ -81,6 +81,25 @@ enum SubscriptionStatus {
   payment_failed
 }
 
+enum AiProvider {
+  gemini
+}
+
+enum AiFeatureKey {
+  user_workout_recommendation
+  user_reset_recommendation
+  admin_workout_draft
+  admin_relaxation_draft
+}
+
+enum AiUsageStatus {
+  succeeded
+  quota_blocked
+  provider_unavailable
+  disabled
+  failed
+}
+
 enum WorkoutDifficulty {
   beginner
   intermediate
@@ -117,6 +136,7 @@ model User {
   checkoutSessions       BillingCheckoutSession[]
   subscriptions          UserSubscription[]
   productEntitlements    UserProductEntitlement[]
+  aiUsageRecords         AiUsageRecord[]
 
   @@index([role])
   @@index([status])
@@ -349,6 +369,31 @@ model BillingWebhookReceipt {
 
   @@unique([provider, externalEventId])
   @@map("billing_webhook_receipts")
+}
+
+model AiUsageRecord {
+  id                  String        @id @default(cuid())
+  userId              String
+  role                Role
+  activeBrand         String
+  resolvedUserPlan    UserPlan?
+  provider            AiProvider
+  featureKey          AiFeatureKey
+  usageDate           DateTime      @db.Date
+  status              AiUsageStatus
+  promptTokenCount    Int           @default(0)
+  candidateTokenCount Int           @default(0)
+  totalTokenCount     Int           @default(0)
+  errorCode           String?
+  metadata            Json?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, usageDate, status])
+  @@index([activeBrand, usageDate, role, status])
+  @@index([featureKey, usageDate, status])
+  @@map("ai_usage_records")
 }
 
 model RelaxationTechnique {
