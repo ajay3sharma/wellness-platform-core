@@ -18,6 +18,22 @@ enum AccountStatus {
   pending_approval
 }
 
+enum Market {
+  india
+  global
+}
+
+enum BillingProvider {
+  razorpay
+  stripe
+}
+
+enum UserPlan {
+  free
+  plus
+  pro
+}
+
 enum WorkoutStatus {
   draft
   published
@@ -26,6 +42,43 @@ enum WorkoutStatus {
 enum ContentStatus {
   draft
   published
+}
+
+enum BillingInterval {
+  month
+  year
+}
+
+enum CheckoutKind {
+  cart
+  subscription
+}
+
+enum CheckoutSurface {
+  web
+  mobile
+}
+
+enum BillingCheckoutSessionStatus {
+  pending
+  completed
+  cancelled
+  failed
+  expired
+}
+
+enum OrderStatus {
+  pending
+  paid
+  cancelled
+  payment_failed
+}
+
+enum SubscriptionStatus {
+  pending
+  active
+  cancelled
+  payment_failed
 }
 
 enum WorkoutDifficulty {
@@ -59,10 +112,243 @@ model User {
   workoutsAssignedBy     WorkoutAssignment[]   @relation("AssignedWorkoutsByCoach")
   coachNotes             CoachNote[]           @relation("CoachNotesForUser")
   coachNotesAuthored     CoachNote[]           @relation("CoachNotesByCoach")
+  carts                  Cart[]
+  orders                 Order[]
+  checkoutSessions       BillingCheckoutSession[]
+  subscriptions          UserSubscription[]
+  productEntitlements    UserProductEntitlement[]
 
   @@index([role])
   @@index([status])
   @@map("users")
+}
+
+model CatalogProduct {
+  id            String               @id @default(cuid())
+  title         String
+  description   String
+  category      String?
+  tags          String[]
+  coverImageUrl String?
+  purchaseLabel String?
+  status        ContentStatus        @default(draft)
+  publishedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  prices        CatalogProductPrice[]
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+  entitlements  UserProductEntitlement[]
+
+  @@index([status])
+  @@map("catalog_products")
+}
+
+model CatalogProductPrice {
+  id          String         @id @default(cuid())
+  productId   String
+  market      Market
+  currency    String
+  amountMinor Int
+  isCurrent   Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  product     CatalogProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, market, isCurrent])
+  @@map("catalog_product_prices")
+}
+
+model SubscriptionPlan {
+  id              String                  @id @default(cuid())
+  name            String
+  description     String
+  userPlan        UserPlan
+  billingInterval BillingInterval
+  features        String[]
+  status          ContentStatus           @default(draft)
+  publishedAt     DateTime?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  prices          SubscriptionPlanPrice[]
+  subscriptions   UserSubscription[]
+
+  @@index([status])
+  @@map("subscription_plans")
+}
+
+model SubscriptionPlanPrice {
+  id                 String           @id @default(cuid())
+  subscriptionPlanId String
+  market             Market
+  currency           String
+  amountMinor        Int
+  isCurrent          Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  subscriptionPlan   SubscriptionPlan @relation(fields: [subscriptionPlanId], references: [id], onDelete: Cascade)
+
+  @@index([subscriptionPlanId, market, isCurrent])
+  @@map("subscription_plan_prices")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  market    Market
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CartItem[]
+
+  @@unique([userId, market])
+  @@map("carts")
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId     String
+  productId  String
+  quantity   Int           @default(1)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  cart       Cart          @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product    CatalogProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+model Order {
+  id          String                 @id @default(cuid())
+  userId       String
+  provider     BillingProvider
+  market       Market
+  status       OrderStatus           @default(pending)
+  currency     String
+  amountMinor  Int
+  paidAt       DateTime?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  user         User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items        OrderItem[]
+  checkoutSession BillingCheckoutSession?
+  entitlements UserProductEntitlement[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("orders")
+}
+
+model OrderItem {
+  id              String          @id @default(cuid())
+  orderId          String
+  productId        String?
+  title            String
+  quantity         Int
+  unitAmountMinor  Int
+  totalAmountMinor Int
+  coverImageUrl    String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  order            Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product          CatalogProduct? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model UserSubscription {
+  id                 String                  @id @default(cuid())
+  userId             String
+  subscriptionPlanId String
+  planName           String
+  userPlan           UserPlan
+  billingInterval    BillingInterval
+  provider           BillingProvider
+  market             Market
+  status             SubscriptionStatus      @default(pending)
+  currency           String
+  amountMinor        Int
+  providerPlanId     String?
+  providerSubscriptionId String?
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  activatedAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+  user               User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionPlan   SubscriptionPlan        @relation(fields: [subscriptionPlanId], references: [id], onDelete: Restrict)
+  checkoutSession    BillingCheckoutSession?
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([providerSubscriptionId])
+  @@map("user_subscriptions")
+}
+
+model UserProductEntitlement {
+  id         String          @id @default(cuid())
+  userId      String
+  productId   String
+  orderId     String
+  title       String
+  grantedAt   DateTime       @default(now())
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     CatalogProduct @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([orderId])
+  @@map("user_product_entitlements")
+}
+
+model BillingCheckoutSession {
+  id                  String                       @id @default(cuid())
+  userId              String
+  kind                CheckoutKind
+  provider            BillingProvider
+  market              Market
+  status              BillingCheckoutSessionStatus @default(pending)
+  targetSurface       CheckoutSurface
+  launchToken         String                       @unique
+  currency            String
+  amountMinor         Int
+  providerSessionId   String?
+  providerOrderId     String?
+  providerSubscriptionId String?
+  providerCheckoutUrl String?
+  successUrl          String
+  cancelUrl           String
+  expiresAt           DateTime
+  completedAt         DateTime?
+  snapshot            Json?
+  createdAt           DateTime                     @default(now())
+  updatedAt           DateTime                     @updatedAt
+  orderId             String?                      @unique
+  subscriptionId      String?                      @unique
+  user                User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order               Order?                       @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  subscription        UserSubscription?            @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([providerSessionId])
+  @@index([providerOrderId])
+  @@index([providerSubscriptionId])
+  @@map("billing_checkout_sessions")
+}
+
+model BillingWebhookReceipt {
+  id              String          @id @default(cuid())
+  provider        BillingProvider
+  externalEventId String
+  payload         Json
+  receivedAt      DateTime        @default(now())
+  processedAt     DateTime?
+
+  @@unique([provider, externalEventId])
+  @@map("billing_webhook_receipts")
 }
 
 model RelaxationTechnique {

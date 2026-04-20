@@ -81,7 +81,8 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 - Phase 0: complete
 - Phase 1: accepted and runtime-validated in the current baseline
 - Phase 2: implemented and locally validated in the current baseline
-- Phase 3: next
+- Phase 3: implemented in code and repo-validated in the current baseline
+- Phase 3 live billing acceptance still requires real Stripe and Razorpay credentials plus webhook delivery
 
 ## Contract Freeze Rules
 
@@ -161,10 +162,10 @@ Phase 1 acceptance has already been validated on the current baseline through th
 ### Phase D: Commerce + Subscriptions
 
 - API owner: products, carts, orders, plans, entitlements
-- billing owner: provider adapters and webhook handling
-- admin owner: products, orders, plans
-- web owner: store, account, order history, subscriptions
-- mobile owner: store and subscription surfaces
+- billing owner: provider adapters, checkout launch orchestration, and webhook handling
+- admin owner: products, plans, orders, subscriptions
+- web owner: store, account, order history, subscriptions, and checkout bridge
+- mobile owner: store, subscription surfaces, and checkout return flow
 
 ### Phase E: AI + Quotas
 
@@ -178,6 +179,9 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - Keep all payment logic behind the internal billing abstraction.
 - India traffic should use Razorpay by default.
 - Global traffic should use Stripe by default.
+- Use an internal checkout launch URL as the handoff point for both web and mobile.
+- Finalize orders and subscriptions from webhook reconciliation, not success-page redirects.
+- Carts are for one-time products only. Subscription checkout is a separate flow.
 - AI must never be required for core product usability.
 - When AI quota is exhausted or the provider is unavailable:
   - return a standard unavailable or quota error from the API

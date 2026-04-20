@@ -9,6 +9,11 @@ export type WorkoutStatus = "draft" | "published";
 export type ContentStatus = "draft" | "published";
 export type WorkoutSessionStatus = "in_progress" | "completed";
 export type AccountStatus = "active" | "pending_approval";
+export type BillingInterval = "month" | "year";
+export type CheckoutKind = "cart" | "subscription";
+export type CheckoutSurface = "web" | "mobile";
+export type OrderStatus = "pending" | "paid" | "cancelled" | "payment_failed";
+export type SubscriptionStatus = "pending" | "active" | "cancelled" | "payment_failed";
 export type AiAvailabilityStatus =
   | "available"
   | "quota_exceeded"
@@ -105,6 +110,7 @@ export interface PlatformConfig {
   billing: {
     defaultMarket: Market;
     enabledProviders: BillingProviderId[];
+    checkoutBridgePath: string;
   };
   ai: {
     mode: "free_tier_only";
@@ -114,17 +120,222 @@ export interface PlatformConfig {
 }
 
 export interface CheckoutSession {
+  id: string;
   provider: BillingProviderId;
   market: Market;
   currency: string;
   amountMinor: number;
+  kind: CheckoutKind;
+  expiresAt: string;
+  target: CheckoutTarget;
+  providerCheckoutUrl: string | null;
+  razorpay:
+    | {
+        keyId: string;
+        name: string;
+        description: string;
+        orderId: string | null;
+        subscriptionId: string | null;
+        prefill: {
+          name: string;
+          email: string;
+        };
+        callbackUrls: {
+          success: string;
+          cancel: string;
+        };
+      }
+    | null;
 }
 
 export interface SubscriptionPlan {
   id: string;
   name: string;
   userPlan: UserPlan;
-  billingProvider: BillingProviderId;
+  description: string;
+  billingInterval: BillingInterval;
+  features: string[];
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+  activePrices: SubscriptionPlanPrice[];
+}
+
+export interface CatalogProductPrice {
+  id: string;
+  market: Market;
+  currency: string;
+  amountMinor: number;
+  isCurrent: boolean;
+  createdAt: string;
+}
+
+export interface CatalogProductListItem {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  tags: string[];
+  coverImageUrl: string | null;
+  purchaseLabel: string | null;
+  status: ContentStatus;
+  publishedAt: string | null;
+  updatedAt: string;
+  activePrices: CatalogProductPrice[];
+}
+
+export type CatalogProductDetail = CatalogProductListItem;
+
+export interface SaveCatalogProductRequest {
+  title: string;
+  description: string;
+  category?: string | null;
+  tags: string[];
+  coverImageUrl?: string | null;
+  purchaseLabel?: string | null;
+  prices: Array<{
+    market: Market;
+    amountMinor: number;
+    currency?: string;
+  }>;
+}
+
+export interface SubscriptionPlanPrice {
+  id: string;
+  market: Market;
+  currency: string;
+  amountMinor: number;
+  isCurrent: boolean;
+  createdAt: string;
+}
+
+export type SubscriptionPlanDetail = SubscriptionPlan;
+
+export interface SaveSubscriptionPlanRequest {
+  name: string;
+  description: string;
+  userPlan: UserPlan;
+  billingInterval: BillingInterval;
+  features: string[];
+  prices: Array<{
+    market: Market;
+    amountMinor: number;
+    currency?: string;
+  }>;
+}
+
+export interface CartItem {
+  id: string;
+  productId: string;
+  productTitle: string;
+  coverImageUrl: string | null;
+  quantity: number;
+  market: Market;
+  currency: string;
+  unitAmountMinor: number;
+  totalAmountMinor: number;
+}
+
+export interface Cart {
+  id: string;
+  market: Market;
+  currency: string;
+  totalItems: number;
+  subtotalAmountMinor: number;
+  updatedAt: string;
+  items: CartItem[];
+}
+
+export interface UpsertCartItemRequest {
+  productId: string;
+  quantity: number;
+  market: Market;
+}
+
+export interface UpdateCartItemRequest {
+  quantity: number;
+}
+
+export interface CheckoutTarget {
+  surface: CheckoutSurface;
+  market: Market;
+}
+
+export type CreateCartCheckoutRequest = CheckoutTarget;
+
+export interface CreateSubscriptionCheckoutRequest extends CheckoutTarget {
+  subscriptionPlanId: string;
+}
+
+export interface CheckoutLaunch {
+  checkoutSessionId: string;
+  provider: BillingProviderId;
+  market: Market;
+  launchUrl: string;
+  expiresAt: string;
+}
+
+export interface OrderItem {
+  id: string;
+  productId: string;
+  title: string;
+  quantity: number;
+  unitAmountMinor: number;
+  totalAmountMinor: number;
+  coverImageUrl: string | null;
+}
+
+export interface OrderRecord {
+  id: string;
+  status: OrderStatus;
+  provider: BillingProviderId;
+  market: Market;
+  currency: string;
+  amountMinor: number;
+  userId: string;
+  userDisplayName: string | null;
+  userEmail: string | null;
+  checkoutSessionId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  items: OrderItem[];
+}
+
+export interface UserSubscription {
+  id: string;
+  subscriptionPlanId: string;
+  planName: string;
+  userPlan: UserPlan;
+  billingInterval: BillingInterval;
+  status: SubscriptionStatus;
+  provider: BillingProviderId;
+  market: Market;
+  currency: string;
+  amountMinor: number;
+  userId: string;
+  userDisplayName: string | null;
+  userEmail: string | null;
+  checkoutSessionId: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  activatedAt: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EntitlementProductRecord {
+  productId: string;
+  title: string;
+  orderId: string;
+  grantedAt: string;
+}
+
+export interface EntitlementSnapshot {
+  userPlan: UserPlan;
+  activeSubscription: UserSubscription | null;
+  ownedProducts: EntitlementProductRecord[];
 }
 
 export interface AiQuotaPolicy {

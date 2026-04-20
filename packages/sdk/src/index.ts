@@ -1,34 +1,49 @@
 import { platformConfig } from "@platform/config";
 import type {
   ApiError,
+  Cart,
+  CatalogProductDetail,
+  CatalogProductListItem,
   AssignCoachRequest,
   AssignWorkoutRequest,
   AuthSession,
   CoachUserHistory,
   CoachUserRecord,
+  CheckoutLaunch,
+  CheckoutSession,
   CompleteWorkoutSessionRequest,
+  CreateCartCheckoutRequest,
+  CreateSubscriptionCheckoutRequest,
   CurrentUser,
   DailyPanchangRecord,
   DailyQuoteRecord,
+  EntitlementSnapshot,
   LoginRequest,
   MusicTrackDetail,
   MusicTrackListItem,
   LogoutRequest,
+  OrderRecord,
   RelaxationTechniqueDetail,
   RelaxationTechniqueListItem,
   RegisterRequest,
   RegisterResult,
   RefreshSessionRequest,
+  SaveCatalogProductRequest,
   SaveDailyPanchangRequest,
   SaveDailyQuoteRequest,
   SaveMusicTrackRequest,
   SaveRelaxationTechniqueRequest,
   SaveCoachNoteRequest,
+  SaveSubscriptionPlanRequest,
   SaveWorkoutRequest,
   ServiceHealth,
   StartWorkoutSessionRequest,
+  SubscriptionPlanDetail,
   TodayWellnessSnapshot,
   UpdateWorkoutSessionRequest,
+  UpdateCartItemRequest,
+  UpsertCartItemRequest,
+  UserSubscription,
   UserDirectoryRecord,
   WorkoutDetail,
   WorkoutListItem,
@@ -54,6 +69,23 @@ export interface ApiClient {
   workouts: {
     list: () => Promise<WorkoutListItem[]>;
     detail: (workoutId: string) => Promise<WorkoutDetail>;
+  };
+  store: {
+    products: () => Promise<CatalogProductListItem[]>;
+    productDetail: (productId: string) => Promise<CatalogProductDetail>;
+    plans: () => Promise<SubscriptionPlanDetail[]>;
+    cart: (market?: "india" | "global") => Promise<Cart>;
+    upsertCartItem: (payload: UpsertCartItemRequest) => Promise<Cart>;
+    updateCartItem: (itemId: string, payload: UpdateCartItemRequest) => Promise<Cart>;
+    removeCartItem: (itemId: string) => Promise<Cart>;
+    createCartCheckout: (payload: CreateCartCheckoutRequest) => Promise<CheckoutLaunch>;
+    createSubscriptionCheckout: (
+      payload: CreateSubscriptionCheckoutRequest
+    ) => Promise<CheckoutLaunch>;
+    checkoutLaunch: (checkoutSessionId: string, token: string) => Promise<CheckoutSession>;
+    orders: () => Promise<OrderRecord[]>;
+    subscription: () => Promise<UserSubscription | null>;
+    entitlements: () => Promise<EntitlementSnapshot>;
   };
   wellness: {
     listRelaxation: () => Promise<RelaxationTechniqueListItem[]>;
@@ -122,6 +154,35 @@ export interface ApiClient {
       ) => Promise<DailyPanchangRecord>;
       publish: (entryId: string) => Promise<DailyPanchangRecord>;
       unpublish: (entryId: string) => Promise<DailyPanchangRecord>;
+    };
+  };
+  adminCommerce: {
+    products: {
+      list: () => Promise<CatalogProductListItem[]>;
+      create: (payload: SaveCatalogProductRequest) => Promise<CatalogProductDetail>;
+      update: (
+        productId: string,
+        payload: SaveCatalogProductRequest
+      ) => Promise<CatalogProductDetail>;
+      publish: (productId: string) => Promise<CatalogProductDetail>;
+      unpublish: (productId: string) => Promise<CatalogProductDetail>;
+    };
+    plans: {
+      list: () => Promise<SubscriptionPlanDetail[]>;
+      create: (payload: SaveSubscriptionPlanRequest) => Promise<SubscriptionPlanDetail>;
+      update: (
+        planId: string,
+        payload: SaveSubscriptionPlanRequest
+      ) => Promise<SubscriptionPlanDetail>;
+      publish: (planId: string) => Promise<SubscriptionPlanDetail>;
+      unpublish: (planId: string) => Promise<SubscriptionPlanDetail>;
+    };
+    orders: {
+      list: () => Promise<OrderRecord[]>;
+      detail: (orderId: string) => Promise<OrderRecord>;
+    };
+    subscriptions: {
+      list: () => Promise<UserSubscription[]>;
     };
   };
   coachUsers: {
@@ -226,6 +287,90 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
       list: () => request<WorkoutListItem[]>("/workouts", { method: "GET" }, resolvedOptions),
       detail: (workoutId) =>
         request<WorkoutDetail>(`/workouts/${workoutId}`, { method: "GET" }, resolvedOptions)
+    },
+    store: {
+      products: () =>
+        request<CatalogProductListItem[]>("/store/products", { method: "GET" }, resolvedOptions),
+      productDetail: (productId) =>
+        request<CatalogProductDetail>(
+          `/store/products/${productId}`,
+          { method: "GET" },
+          resolvedOptions
+        ),
+      plans: () =>
+        request<SubscriptionPlanDetail[]>("/store/plans", { method: "GET" }, resolvedOptions),
+      cart: (market) =>
+        request<Cart>(
+          `/store/cart${market ? `?market=${encodeURIComponent(market)}` : ""}`,
+          { method: "GET" },
+          resolvedOptions
+        ),
+      upsertCartItem: (payload) =>
+        request<Cart>(
+          "/store/cart/items",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      updateCartItem: (itemId, payload) =>
+        request<Cart>(
+          `/store/cart/items/${itemId}`,
+          {
+            method: "PATCH",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      removeCartItem: (itemId) =>
+        request<Cart>(
+          `/store/cart/items/${itemId}`,
+          {
+            method: "DELETE"
+          },
+          resolvedOptions
+        ),
+      createCartCheckout: (payload) =>
+        request<CheckoutLaunch>(
+          "/store/checkout-sessions/cart",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      createSubscriptionCheckout: (payload) =>
+        request<CheckoutLaunch>(
+          "/store/checkout-sessions/subscription",
+          {
+            method: "POST",
+            body: JSON.stringify(payload)
+          },
+          resolvedOptions
+        ),
+      checkoutLaunch: (checkoutSessionId, token) =>
+        request<CheckoutSession>(
+          `/store/checkout-sessions/${checkoutSessionId}/launch?token=${encodeURIComponent(token)}`,
+          {
+            method: "GET"
+          },
+          resolvedOptions
+        ),
+      orders: () =>
+        request<OrderRecord[]>("/store/orders/me", { method: "GET" }, resolvedOptions),
+      subscription: () =>
+        request<UserSubscription | null>(
+          "/store/subscription/me",
+          { method: "GET" },
+          resolvedOptions
+        ),
+      entitlements: () =>
+        request<EntitlementSnapshot>(
+          "/store/entitlements/me",
+          { method: "GET" },
+          resolvedOptions
+        )
     },
     wellness: {
       listRelaxation: () =>
@@ -519,6 +664,110 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
             {
               method: "POST"
             },
+            resolvedOptions
+          )
+      }
+    },
+    adminCommerce: {
+      products: {
+        list: () =>
+          request<CatalogProductListItem[]>(
+            "/admin/commerce/products",
+            { method: "GET" },
+            resolvedOptions
+          ),
+        create: (payload) =>
+          request<CatalogProductDetail>(
+            "/admin/commerce/products",
+            {
+              method: "POST",
+              body: JSON.stringify(payload)
+            },
+            resolvedOptions
+          ),
+        update: (productId, payload) =>
+          request<CatalogProductDetail>(
+            `/admin/commerce/products/${productId}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify(payload)
+            },
+            resolvedOptions
+          ),
+        publish: (productId) =>
+          request<CatalogProductDetail>(
+            `/admin/commerce/products/${productId}/publish`,
+            {
+              method: "POST"
+            },
+            resolvedOptions
+          ),
+        unpublish: (productId) =>
+          request<CatalogProductDetail>(
+            `/admin/commerce/products/${productId}/unpublish`,
+            {
+              method: "POST"
+            },
+            resolvedOptions
+          )
+      },
+      plans: {
+        list: () =>
+          request<SubscriptionPlanDetail[]>(
+            "/admin/commerce/plans",
+            { method: "GET" },
+            resolvedOptions
+          ),
+        create: (payload) =>
+          request<SubscriptionPlanDetail>(
+            "/admin/commerce/plans",
+            {
+              method: "POST",
+              body: JSON.stringify(payload)
+            },
+            resolvedOptions
+          ),
+        update: (planId, payload) =>
+          request<SubscriptionPlanDetail>(
+            `/admin/commerce/plans/${planId}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify(payload)
+            },
+            resolvedOptions
+          ),
+        publish: (planId) =>
+          request<SubscriptionPlanDetail>(
+            `/admin/commerce/plans/${planId}/publish`,
+            {
+              method: "POST"
+            },
+            resolvedOptions
+          ),
+        unpublish: (planId) =>
+          request<SubscriptionPlanDetail>(
+            `/admin/commerce/plans/${planId}/unpublish`,
+            {
+              method: "POST"
+            },
+            resolvedOptions
+          )
+      },
+      orders: {
+        list: () =>
+          request<OrderRecord[]>("/admin/commerce/orders", { method: "GET" }, resolvedOptions),
+        detail: (orderId) =>
+          request<OrderRecord>(
+            `/admin/commerce/orders/${orderId}`,
+            { method: "GET" },
+            resolvedOptions
+          )
+      },
+      subscriptions: {
+        list: () =>
+          request<UserSubscription[]>(
+            "/admin/commerce/subscriptions",
+            { method: "GET" },
             resolvedOptions
           )
       }

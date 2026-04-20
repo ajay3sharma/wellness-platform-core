@@ -7,6 +7,7 @@ import { WorkoutsModule } from "./workouts/workouts.module";
 import { WorkoutSessionsModule } from "./workout-sessions/workout-sessions.module";
 import { WorkspaceModule } from "./workspace/workspace.module";
 import { WellnessModule } from "./wellness/wellness.module";
+import { CommerceModule } from "./commerce/commerce.module";
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { WellnessModule } from "./wellness/wellness.module";
     WorkoutsModule,
     WorkoutSessionsModule,
     WorkspaceModule,
-    WellnessModule
+    WellnessModule,
+    CommerceModule
   ]
 })
 export class AppModule {}

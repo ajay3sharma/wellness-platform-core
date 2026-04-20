@@ -21,6 +21,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="checkout-return" />
         <Stack.Screen name="relaxation/[techniqueId]" />
         <Stack.Screen name="music/[trackId]" />
       </Stack>

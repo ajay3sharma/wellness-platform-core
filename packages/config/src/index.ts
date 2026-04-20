@@ -47,7 +47,12 @@ export const runtimeEnv = {
     ["NEXT_PUBLIC_API_URL", "EXPO_PUBLIC_API_URL"],
     activeBrand.domains.api
   ),
-  mobileScheme: getStringEnv("EXPO_PUBLIC_APP_SCHEME", activeBrand.domains.mobileDeepLink)
+  mobileScheme: getStringEnv("EXPO_PUBLIC_APP_SCHEME", activeBrand.domains.mobileDeepLink),
+  stripeSecretKey: getStringEnv("STRIPE_SECRET_KEY", ""),
+  stripeWebhookSecret: getStringEnv("STRIPE_WEBHOOK_SECRET", ""),
+  razorpayKeyId: getStringEnv("RAZORPAY_KEY_ID", ""),
+  razorpayKeySecret: getStringEnv("RAZORPAY_KEY_SECRET", ""),
+  razorpayWebhookSecret: getStringEnv("RAZORPAY_WEBHOOK_SECRET", "")
 };
 
 export const platformConfig: PlatformConfig = {
@@ -87,7 +92,8 @@ export const platformConfig: PlatformConfig = {
   },
   billing: {
     defaultMarket: activeBrand.billing.defaultMarket,
-    enabledProviders: ["razorpay", "stripe"]
+    enabledProviders: ["razorpay", "stripe"],
+    checkoutBridgePath: "/checkout/launch"
   },
   ai: {
     mode: "free_tier_only",

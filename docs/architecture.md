@@ -9,9 +9,9 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 ## Apps
 
 - `apps/mobile`: Expo + Expo Router mobile app for the primary consumer experience, currently implementing auth and fitness flows
-- `apps/web`: Next.js consumer web scaffold for marketing, auth, commerce, and account flows
-- `apps/admin`: Next.js admin and coach portal with Phase 1 content and coaching workspace
-- `apps/api`: NestJS backend with auth, health, config, Prisma wiring, workouts, workout sessions, and coaching endpoints
+- `apps/web`: Next.js consumer web app for marketing, auth, store, account, and internal checkout bridge flows
+- `apps/admin`: Next.js admin and coach portal with content, coaching workspace, and commerce operations
+- `apps/api`: NestJS backend with auth, health, config, Prisma wiring, workouts, wellness, commerce, subscriptions, and billing webhooks
 
 ## Shared Packages
 
@@ -36,6 +36,8 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - Default provider routing:
   - India: Razorpay
   - Global: Stripe
+- Checkout launch always starts from an internal platform session and bridge URL
+- Webhooks are the source of truth for marking orders as paid and subscriptions as active
 - The frontend should call internal billing services, not provider SDKs directly, unless the checkout implementation requires a provider-owned client handoff
 
 ## Auth And Data
@@ -61,7 +63,13 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
   - admin-managed daily quote and panchang entries
   - mobile reset landing backed by the wellness API
   - relaxation detail flow and in-app music player screens
-- Phase 3 commerce and subscriptions remain the next domain milestone
+- Phase 3 commerce is implemented and repo-validated with:
+  - admin commerce workspace for products, plans, orders, and subscriptions
+  - append-only product and subscription pricing per market
+  - web store, account, checkout bridge, and return routes
+  - mobile store flows with browser handoff and deep-link return
+  - API-backed cart, orders, subscriptions, entitlements, checkout sessions, and provider webhooks
+- Live provider checkout acceptance still depends on real Stripe and Razorpay credentials plus webhook delivery
 
 ## AI Constraints
 
@@ -102,6 +110,9 @@ Web routes:
 - `/login`
 - `/account`
 - `/store`
+- `/checkout/launch`
+- `/checkout/success`
+- `/checkout/cancel`
 
 Admin routes:
 
@@ -110,6 +121,7 @@ Admin routes:
 - `/dashboard`
 - `/users`
 - `/content`
+- `/commerce`
 
 API routes:
 
@@ -118,12 +130,16 @@ API routes:
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
+- store routes for products, plans, cart, checkout sessions, orders, subscriptions, and entitlements
+- admin commerce routes for products, plans, orders, and subscriptions
+- billing webhook routes for Stripe and Razorpay
 
 Mobile surface:
 
 - sign-in and sign-up routes
 - tab shell
 - home, workouts, workout detail, workout session, progress, reset, and store routes
+- checkout return route for browser-based payment handoff
 - Expo app config driven by shared brand and config packages
 
 ## Bootstrap Validation

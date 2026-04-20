@@ -1,12 +1,19 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { webAppMetadata, webNavigation, webSurfaceCopy } from "../lib/site";
+import { useWebSession } from "../lib/session";
 
 interface SiteShellProps {
   children: ReactNode;
 }
 
 export function SiteShell({ children }: SiteShellProps) {
+  const router = useRouter();
+  const { session, status, signOut } = useWebSession();
+
   return (
     <div className="site-shell">
       <header className="topbar">
@@ -28,9 +35,26 @@ export function SiteShell({ children }: SiteShellProps) {
           ))}
         </nav>
 
-        <Link className="cta-pill" href="/login">
-          Sign in
-        </Link>
+        {status === "signed-in" && session ? (
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+            <span className="muted" style={{ fontSize: "0.95rem" }}>
+              {session.user.displayName}
+            </span>
+            <button
+              className="ghost-pill"
+              onClick={() => {
+                void signOut().then(() => router.push("/login"));
+              }}
+              type="button"
+            >
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <Link className="cta-pill" href="/login">
+            Sign in
+          </Link>
+        )}
       </header>
 
       <main className="main-frame">{children}</main>

@@ -19,6 +19,7 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/platform-express": "^10.4.0",
     "@prisma/client": "^6.0.0",
+    "@platform/billing": "workspace:*",
     "@platform/brand": "workspace:*",
     "@platform/config": "workspace:*",
     "@platform/types": "workspace:*",

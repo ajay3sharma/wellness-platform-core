@@ -8,11 +8,12 @@
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint src --max-warnings=0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "next typegen && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@platform/brand": "workspace:*",
     "@platform/config": "workspace:*",
+    "@platform/sdk": "workspace:*",
     "@platform/types": "workspace:*",
     "@platform/ui": "workspace:*",
     "next": "^15.5.2",

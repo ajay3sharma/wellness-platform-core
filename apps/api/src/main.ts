@@ -8,7 +8,8 @@ import { ApiExceptionFilter } from "./common/api-exception.filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    bufferLogs: true
+    bufferLogs: true,
+    rawBody: true
   });
 
   app.setGlobalPrefix(apiConfig.basePath.replace(/^\//, ""));

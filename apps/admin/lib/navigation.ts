@@ -28,6 +28,12 @@ export const navigationGroups: Array<{ label: string; items: NavItem[] }> = [
         label: "Content",
         description: "Workouts, relaxation, and publishing tools.",
         roles: ["admin"]
+      },
+      {
+        href: "/commerce",
+        label: "Commerce",
+        description: "Products, plans, orders, and subscriptions.",
+        roles: ["admin"]
       }
     ]
   },

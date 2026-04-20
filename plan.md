@@ -11,6 +11,9 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Phase 0 is complete and committed
 - Phase 1 is accepted and runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
+- Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
+- Root `lint`, `typecheck`, and `build` are green on the current Phase 3 branch baseline
+- Live Stripe and Razorpay acceptance still requires real provider credentials and webhook delivery
 
 ## Stable Platform Decisions
 
@@ -224,6 +227,20 @@ Make the platform commercially usable across store and subscription flows.
 - India checkout uses Razorpay by default
 - global checkout uses Stripe by default
 
+### Acceptance Status
+
+Phase 3 is implemented and repo-validated on the current baseline, including:
+
+- shared commerce contracts, market-aware pricing, SDK methods, and billing helpers
+- Prisma models for products, plans, carts, orders, subscriptions, entitlements, checkout sessions, and webhook receipts
+- API store routes, admin commerce routes, checkout orchestration, and webhook reconciliation
+- admin commerce workspace at `/commerce`
+- web store, account, and internal checkout bridge routes
+- mobile store flow with browser launch and deep-link return
+- root `lint`, `typecheck`, and `build`
+
+Phase 3 still needs live provider acceptance with real Stripe and Razorpay credentials before it should be treated as fully runtime-accepted.
+
 ## Phase 4: AI + Quota Layer
 
 ### Goal
@@ -293,4 +310,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The next implementation milestone is **Phase 3: Commerce + Subscriptions**.
+The immediate next step is **Phase 3 live provider validation** for Stripe and Razorpay checkout plus webhook delivery. After that, the next implementation milestone is **Phase 4: AI + Quota Layer**.

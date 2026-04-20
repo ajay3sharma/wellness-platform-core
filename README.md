@@ -9,16 +9,18 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 - Phase 0 shared foundation is complete
 - Phase 1 auth, signup, fitness, and coach workspace is now runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
-- `apps/web` remains scaffold-only by design at this stage
+- Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
+- repo-level `lint`, `typecheck`, and `build` are green on the current Phase 3 branch baseline
+- live Stripe and Razorpay acceptance still requires real provider credentials plus webhook delivery
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
 
 ## Workspace Layout
 
 - `apps/mobile`: mobile consumer app with signup, login, workouts, session flow, and history
-- `apps/web`: consumer website scaffold for landing, login, account, and store
-- `apps/admin`: admin and coach portal with login, request-access, workouts, users, approvals, and coaching workspace
-- `apps/api`: NestJS backend with Prisma-backed auth, workouts, workout sessions, and coaching endpoints
+- `apps/web`: consumer website with live auth, store, account, and internal checkout bridge routes
+- `apps/admin`: admin and coach portal with content, users, approvals, coaching workspace, and commerce workspace
+- `apps/api`: NestJS backend with Prisma-backed auth, fitness, wellness, commerce, subscriptions, and billing webhook endpoints
 - `packages/brand`: brand registry and the first `MoveYOU` brand pack
 - `packages/types`: shared platform contracts
 - `packages/config`: deployment and platform defaults
@@ -40,6 +42,16 @@ First-time setup:
 
 - `corepack pnpm install`
 - `Copy-Item .env.example .env`
+
+Commerce provider variables for real checkout:
+
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `RAZORPAY_KEY_ID`
+- `RAZORPAY_KEY_SECRET`
+- `RAZORPAY_WEBHOOK_SECRET`
+
+Without those values, the catalog UI can still render locally, but real checkout session creation and webhook reconciliation will not complete.
 
 Start everything:
 
@@ -80,10 +92,10 @@ Invoke-RestMethod `
 
 ## Current Scaffolded Routes
 
-- web: `/`, `/login`, `/account`, `/store`
-- admin: `/`, `/login`, `/request-access`, `/dashboard`, `/users`, `/content`
-- api: `GET /api/v1/health`, `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, `GET /api/v1/auth/me`, workouts, workout sessions, admin user, and coach user endpoints
-- mobile: sign-in, sign-up, home, workouts, workout detail, live workout session, progress, reset, and store tabs
+- web: `/`, `/login`, `/account`, `/store`, `/checkout/launch`, `/checkout/success`, `/checkout/cancel`
+- admin: `/`, `/login`, `/request-access`, `/dashboard`, `/users`, `/content`, `/commerce`
+- api: `GET /api/v1/health`, auth endpoints, workout and wellness endpoints, store endpoints, admin commerce endpoints, and billing webhook endpoints
+- mobile: sign-in, sign-up, home, workouts, workout detail, live workout session, progress, reset, store tab, and checkout return route
 
 ## Platform Defaults
 
@@ -99,7 +111,7 @@ Invoke-RestMethod `
 - Phase 0: complete
 - Phase 1: accepted and runtime-validated
 - Phase 2: implemented and locally validated
-- Phase 3: next
+- Phase 3: implemented in code and repo-validated; live provider acceptance pending credentials and webhook testing
 
 ## Git Workflow
 

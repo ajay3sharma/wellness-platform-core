@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start --port 3001",
     "lint": "eslint app components lib next.config.mjs --max-warnings=0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "next typegen && tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@platform/ai": "workspace:*",

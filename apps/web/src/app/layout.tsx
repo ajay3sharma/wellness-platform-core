@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
 import { webSurfaceCopy, webTheme, webTitleTemplate } from "../lib/site";
 import { SiteShell } from "../components/site-shell";
+import { WebSessionProvider } from "../lib/session";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body style={cssVariables}>
-        <SiteShell>{children}</SiteShell>
+        <WebSessionProvider>
+          <SiteShell>{children}</SiteShell>
+        </WebSessionProvider>
       </body>
     </html>
   );
