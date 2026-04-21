@@ -13,7 +13,7 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
 - Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented in code across `apps/api`, `apps/admin`, and `apps/mobile`
-- Root `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 branch baseline
+- Root `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 repo baseline
 - Phase 3 live Stripe and Razorpay acceptance is intentionally parked as a pending follow-up
 - Live Gemini provider acceptance still requires a real `GEMINI_API_KEY`
 
@@ -305,7 +305,7 @@ Harden the current platform for dependable release without adding new product do
 - lint, typecheck, build, and smoke tests pass
 - readiness reports dependency state accurately while optional billing and AI config remain bootable
 - primary browser and API flows pass through deterministic smoke coverage
-- manual mobile release checks are documented for the current feature baseline
+- manual mobile release checks are documented for the current repo baseline
 
 ### Acceptance Status
 

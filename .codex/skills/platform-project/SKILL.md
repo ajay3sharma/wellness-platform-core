@@ -233,7 +233,7 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - Smoke: `corepack pnpm smoke`
 - Brand check: `node scripts/brand-check.mjs`
 - Repo check: `node scripts/repo-check.mjs`
-- Branch names: `codex/<task-name>`
+- Git flow: prefer direct work on `main` for accepted milestones; use `codex/<task-name>` only when work needs temporary isolation
 
 The root dev commands load the repo-level `.env` before starting each workspace so local service URLs and bootstrap settings stay consistent.
 

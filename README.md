@@ -145,7 +145,8 @@ Smoke fixture accounts after `corepack pnpm smoke:setup`:
 ## Git Workflow
 
 - Use `main` as the default branch
-- Use `codex/*` for feature branches
+- Commit directly to `main` for accepted work and normal milestone progress
+- Use `codex/*` only for risky or incomplete work that should stay isolated temporarily
 - Keep brand-facing strings inside `packages/brand`
 
 More detail lives in [plan.md](./plan.md) and [docs/architecture.md](./docs/architecture.md).
