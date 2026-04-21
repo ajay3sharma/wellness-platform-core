@@ -489,6 +489,20 @@ export interface ServiceHealth {
   activeBrand: BrandKey;
 }
 
+export type ServiceDependencyKey = "database" | "billing" | "ai";
+
+export interface ServiceDependencyStatus {
+  key: ServiceDependencyKey;
+  status: "ok" | "degraded";
+  required: boolean;
+  summary: string;
+  details?: string[];
+}
+
+export interface ServiceReadiness extends ServiceHealth {
+  dependencies: ServiceDependencyStatus[];
+}
+
 export interface AppMetadataSnapshot {
   surface: AppSurface;
   appName: string;

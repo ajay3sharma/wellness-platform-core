@@ -84,8 +84,16 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 - Phase 2: implemented and locally validated in the current baseline
 - Phase 3: implemented in code and repo-validated in the current baseline
 - Phase 4: implemented in code and repo-validated in the current baseline
-- Phase 3 live billing acceptance still requires real Stripe and Razorpay credentials plus webhook delivery
+- Phase 5: implemented and repo-validated in the current baseline
+- Phase 3 live billing acceptance is parked as a pending follow-up until explicitly resumed
 - Phase 4 live AI acceptance still requires a real `GEMINI_API_KEY` for end-to-end provider calls
+- Phase 5 baseline includes:
+  - request tracing
+  - readiness
+  - structured logs
+  - deterministic seed support
+  - Playwright smoke coverage for API, web, and admin
+  - manual mobile release checks
 
 ## Contract Freeze Rules
 
@@ -177,6 +185,25 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - mobile owner: recommendation entry points
 - web owner: no current Phase 4 AI scope; keep web AI out unless the user reprioritizes it
 
+### Phase F: Hardening + Release Readiness
+
+- API owner:
+  - request tracing
+  - readiness
+  - structured logs
+  - config diagnostics
+- shared foundation owner:
+  - deterministic seed support
+  - smoke harness
+  - CI smoke job
+  - release docs and checklists
+- web owner:
+  - keep store, login, account, and checkout bridge smoke-safe
+- admin owner:
+  - keep login, request-access, dashboard, content, and commerce smoke-safe
+- mobile owner:
+  - maintain manual validation coverage only in this phase
+
 ## Billing And AI Rules
 
 - Keep all payment logic behind the internal billing abstraction.
@@ -202,6 +229,8 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - Lint: `corepack pnpm lint`
 - Typecheck: `corepack pnpm typecheck`
 - Build: `corepack pnpm build`
+- Smoke setup: `corepack pnpm smoke:setup`
+- Smoke: `corepack pnpm smoke`
 - Brand check: `node scripts/brand-check.mjs`
 - Repo check: `node scripts/repo-check.mjs`
 - Branch names: `codex/<task-name>`

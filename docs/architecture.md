@@ -11,7 +11,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - `apps/mobile`: Expo + Expo Router mobile app for the primary consumer experience, currently implementing auth and fitness flows
 - `apps/web`: Next.js consumer web app for marketing, auth, store, account, and internal checkout bridge flows
 - `apps/admin`: Next.js admin and coach portal with content, coaching workspace, and commerce operations
-- `apps/api`: NestJS backend with auth, health, config, Prisma wiring, workouts, wellness, commerce, subscriptions, and billing webhooks
+- `apps/api`: NestJS backend with auth, health, readiness, config, Prisma wiring, workouts, wellness, commerce, subscriptions, AI, and billing webhooks
 
 ## Shared Packages
 
@@ -74,6 +74,11 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
   - Prisma-backed AI usage ledger and UTC-midnight quota enforcement
   - admin dashboard quota visibility and draft-generation tools for workouts and relaxation
   - mobile workout and reset recommendation entry points that only rank published catalog content
+- Phase 5 is now repo-validated with:
+  - request tracing through `x-request-id` and `ApiError.traceId`
+  - readiness checks for database, billing config, and AI config
+  - structured API logs for auth, access denials, checkout, webhook processing, and AI failures
+  - deterministic smoke fixtures plus Playwright smoke coverage for API, web, and admin
 - Live provider checkout acceptance still depends on real Stripe and Razorpay credentials plus webhook delivery
 
 ## AI Constraints
@@ -91,6 +96,8 @@ Root workflow:
 1. `corepack pnpm install`
 2. `Copy-Item .env.example .env`
 3. `corepack pnpm dev`
+4. `corepack pnpm smoke:setup`
+5. `corepack pnpm smoke`
 
 Root shortcuts:
 
@@ -132,6 +139,7 @@ Admin routes:
 API routes:
 
 - `GET /api/v1/health`
+- `GET /api/v1/health/readiness`
 - `POST /api/v1/auth/login`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
@@ -161,5 +169,6 @@ The bootstrap is considered healthy when:
 2. workspace detection sees all apps and packages
 3. `corepack pnpm dev` can boot web, admin, API, and mobile together
 4. `corepack pnpm lint`, `corepack pnpm typecheck`, and `corepack pnpm build` all pass
-5. the API health endpoint returns `ok` at `/api/v1/health`
-6. apps resolve brand metadata from shared packages rather than hardcoded strings
+5. `corepack pnpm smoke:setup` and `corepack pnpm smoke` validate the seeded browser and API baseline
+6. the API health endpoint returns `ok` at `/api/v1/health` and readiness reflects dependency state at `/api/v1/health/readiness`
+7. apps resolve brand metadata from shared packages rather than hardcoded strings

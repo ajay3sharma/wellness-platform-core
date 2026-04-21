@@ -13,8 +13,9 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
 - Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented in code across `apps/api`, `apps/admin`, and `apps/mobile`
-- Root `lint`, `typecheck`, and `build` are green on the current Phase 4 branch baseline
-- Live Stripe and Razorpay acceptance still requires real provider credentials and webhook delivery
+- Root `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 branch baseline
+- Phase 3 live Stripe and Razorpay acceptance is intentionally parked as a pending follow-up
+- Live Gemini provider acceptance still requires a real `GEMINI_API_KEY`
 
 ## Stable Platform Decisions
 
@@ -287,21 +288,45 @@ Phase 4 is implemented and repo-validated on the current baseline, including:
 
 ### Goal
 
-Prepare the platform for dependable release and future iteration.
+Harden the current platform for dependable release without adding new product domains.
 
 ### Main Work
 
-- end-to-end QA across surfaces
-- monitoring and logging polish
-- retry and idempotency for external integrations
-- role and permission review
-- deployment readiness and release checklists
+- request tracing with reliable `x-request-id` echo and `ApiError.traceId`
+- readiness reporting for database, billing config, and AI config
+- structured API logs for auth, access denials, checkout, webhook processing, AI quota blocks, AI provider failures, and unhandled exceptions
+- deterministic seed support for local and CI smoke coverage
+- Playwright smoke automation for API, web, and admin surfaces
+- release and manual smoke checklists
+- keep mobile validation manual in this phase
 
 ### Acceptance
 
 - lint, typecheck, build, and smoke tests pass
-- primary user flows pass across mobile, admin, web, and API
-- operational visibility exists for auth, billing, AI, and content workflows
+- readiness reports dependency state accurately while optional billing and AI config remain bootable
+- primary browser and API flows pass through deterministic smoke coverage
+- manual mobile release checks are documented for the current feature baseline
+
+### Acceptance Status
+
+Phase 5 is now repo-validated on the current baseline, including:
+
+- reliable `x-request-id` generation and `ApiError.traceId` propagation
+- structured API logs for startup diagnostics, auth denials, role denials, checkout creation, webhook processing, and AI quota or provider failures
+- `GET /api/v1/health/readiness` with dependency snapshots for database, billing config, and AI config
+- deterministic smoke seed data for admin, coach, user, workouts, wellness content, products, plans, and coach workspace fixtures
+- Playwright smoke coverage for API, web, and admin
+- GitHub Actions smoke job definition with Postgres-backed setup
+- Phase 5 release checklist docs plus manual mobile validation guidance
+
+## Pending Follow-Ups
+
+- Phase 3 live billing validation:
+  - Stripe hosted checkout with real credentials
+  - Razorpay checkout with real credentials
+  - real webhook delivery and reconciliation acceptance
+- live Gemini acceptance:
+  - confirm the current AI surfaces against a real `GEMINI_API_KEY`
 
 ## Ownership Map
 
@@ -325,4 +350,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The immediate parallel follow-up remains **Phase 3 live provider validation** for Stripe and Razorpay checkout plus webhook delivery. The next implementation milestone after the current validated code baseline is **Phase 5: Hardening and release prep**.
+The canonical implementation phases are now repo-validated through **Phase 5**. The remaining tracked follow-ups are **Phase 3 live billing validation** and **live Gemini acceptance**, both to be resumed explicitly when needed.

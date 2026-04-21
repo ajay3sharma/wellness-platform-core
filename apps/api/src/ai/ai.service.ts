@@ -18,6 +18,7 @@ import type {
   WorkoutRecommendationResponse
 } from "@platform/types";
 import { createApiException } from "../common/api-error.util";
+import { PlatformLogger } from "../observability/platform-logger.service";
 import { GeminiService, type GeminiJsonResult } from "./gemini.service";
 import { AiQuotaService } from "./ai-quota.service";
 import { WorkoutsService } from "../workouts/workouts.service";
@@ -43,7 +44,8 @@ export class AiService {
     private readonly geminiService: GeminiService,
     private readonly aiQuotaService: AiQuotaService,
     private readonly workoutsService: WorkoutsService,
-    private readonly wellnessService: WellnessService
+    private readonly wellnessService: WellnessService,
+    private readonly logger: PlatformLogger
   ) {}
 
   getUserQuotaStatus(user: CurrentUser): Promise<UserAiQuotaStatus> {
@@ -477,6 +479,15 @@ export class AiService {
       status: normalized.status,
       errorCode: normalized.code,
       metadata
+    });
+
+    this.logger.warn("ai.provider_failure", {
+      status: normalized.httpStatus,
+      errorCode: normalized.code,
+      userId: user.id,
+      role: user.role,
+      brand: user.activeBrand,
+      feature
     });
   }
 

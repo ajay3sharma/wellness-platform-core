@@ -47,6 +47,7 @@ import type {
   SaveSubscriptionPlanRequest,
   SaveWorkoutRequest,
   ServiceHealth,
+  ServiceReadiness,
   StartWorkoutSessionRequest,
   SubscriptionPlanDetail,
   TodayWellnessSnapshot,
@@ -69,6 +70,7 @@ export interface ApiClientOptions {
 
 export interface ApiClient {
   health: () => Promise<ServiceHealth>;
+  healthReadiness: () => Promise<ServiceReadiness>;
   auth: {
     register: (payload: RegisterRequest) => Promise<RegisterResult>;
     login: (payload: LoginRequest) => Promise<AuthSession>;
@@ -268,6 +270,8 @@ export function createApiClient(options: ApiClientOptions = {}): ApiClient {
 
   return {
     health: () => request<ServiceHealth>("/health", { method: "GET" }, resolvedOptions),
+    healthReadiness: () =>
+      request<ServiceReadiness>("/health/readiness", { method: "GET" }, resolvedOptions),
     auth: {
       register: (payload) =>
         request<RegisterResult>(

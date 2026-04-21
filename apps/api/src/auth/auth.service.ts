@@ -16,6 +16,7 @@ import { randomUUID } from "node:crypto";
 import { createApiException } from "../common/api-error.util";
 import type { ApiConfig } from "../config/api-config";
 import { API_CONFIG } from "../config/api-config.token";
+import { PlatformLogger } from "../observability/platform-logger.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { ACCESS_TOKEN_TYPE, REFRESH_TOKEN_TYPE } from "./auth.constants";
 import type { RefreshTokenPayload } from "./auth.types";
@@ -54,7 +55,8 @@ export class AuthService implements OnModuleInit {
   constructor(
     private readonly jwtService: JwtService,
     @Inject(API_CONFIG) private readonly config: ApiConfig,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly logger: PlatformLogger
   ) {}
 
   async onModuleInit() {
@@ -129,11 +131,25 @@ export class AuthService implements OnModuleInit {
     const user = await this.findUserByEmail(payload.email);
 
     if (!user || !(await verifyPassword(payload.password, user.passwordHash))) {
+      this.logger.warn("auth.login.failure", {
+        status: 401,
+        errorCode: "INVALID_CREDENTIALS",
+        brand: this.config.brand.key
+      });
       throw new UnauthorizedException("Invalid credentials.");
     }
 
     this.assertAccountCanSignIn(user);
-    return this.issueSession(user);
+    const session = await this.issueSession(user);
+
+    this.logger.info("auth.login.success", {
+      status: 200,
+      userId: user.id,
+      role: user.role,
+      brand: user.activeBrand
+    });
+
+    return session;
   }
 
   async refresh(payload: RefreshSessionRequest): Promise<AuthSession> {
@@ -316,6 +332,11 @@ export class AuthService implements OnModuleInit {
 
   private assertAccountCanSignIn(user: Pick<User, "status" | "requestedRole">) {
     if (user.status === "pending_approval") {
+      this.logger.warn("auth.login.failure", {
+        status: 403,
+        errorCode: "ACCOUNT_PENDING_APPROVAL",
+        brand: this.config.brand.key
+      });
       throw createApiException(
         HttpStatus.FORBIDDEN,
         "ACCOUNT_PENDING_APPROVAL",

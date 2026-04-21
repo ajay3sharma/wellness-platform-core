@@ -16,12 +16,15 @@
     "build": "node ./scripts/run-turbo.mjs build",
     "lint": "node ./scripts/brand-check.mjs && node ./scripts/repo-check.mjs && node ./scripts/run-turbo.mjs lint",
     "typecheck": "node ./scripts/run-turbo.mjs typecheck",
+    "smoke:setup": "node ./scripts/smoke-setup.mjs",
+    "smoke": "playwright test",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
     "brand:check": "node ./scripts/brand-check.mjs",
     "repo:check": "node ./scripts/repo-check.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@eslint/js": "^9.24.0",
     "@types/node": "^24.0.0",
     "@typescript-eslint/eslint-plugin": "^8.30.0",

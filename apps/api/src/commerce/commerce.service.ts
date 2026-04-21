@@ -34,6 +34,7 @@ import type {
 } from "@platform/types";
 import { randomBytes, randomUUID } from "node:crypto";
 import { apiConfig } from "../config/api-config";
+import { PlatformLogger } from "../observability/platform-logger.service";
 import { PrismaService } from "../prisma/prisma.service";
 import { BillingService } from "./billing.service";
 
@@ -105,7 +106,8 @@ interface RazorpayWebhookPayload {
 export class CommerceService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly billingService: BillingService
+    private readonly billingService: BillingService,
+    private readonly logger: PlatformLogger
   ) {}
 
   async listPublishedProducts(): Promise<CatalogProductListItem[]> {
@@ -723,6 +725,18 @@ export class CommerceService {
       }
     });
 
+    this.logger.info("commerce.checkout_session_created", {
+      status: 200,
+      userId: user.id,
+      role: user.role,
+      brand: user.activeBrand,
+      checkoutKind: "cart",
+      checkoutSessionId,
+      provider,
+      market: payload.market,
+      amountMinor
+    });
+
     return {
       checkoutSessionId,
       provider,
@@ -873,6 +887,18 @@ export class CommerceService {
         }
       });
     }
+
+    this.logger.info("commerce.checkout_session_created", {
+      status: 200,
+      userId: user.id,
+      role: user.role,
+      brand: user.activeBrand,
+      checkoutKind: "subscription",
+      checkoutSessionId,
+      provider,
+      market: payload.market,
+      amountMinor: price.amountMinor
+    });
 
     return {
       checkoutSessionId,
@@ -1056,37 +1082,74 @@ export class CommerceService {
   }
 
   async handleStripeWebhook(rawBody: Buffer, signatureHeader: string | undefined) {
-    const event = this.billingService.verifyStripeWebhook(rawBody, signatureHeader);
-    const externalEventId = String(event.id ?? "");
+    try {
+      const event = this.billingService.verifyStripeWebhook(rawBody, signatureHeader);
+      const externalEventId = String(event.id ?? "");
 
-    if (!externalEventId) {
-      throw new BadRequestException({
-        code: "INVALID_WEBHOOK_PAYLOAD",
-        message: "Stripe webhook payload is missing an event id."
+      if (!externalEventId) {
+        throw new BadRequestException({
+          code: "INVALID_WEBHOOK_PAYLOAD",
+          message: "Stripe webhook payload is missing an event id."
+        });
+      }
+
+      const duplicate = await this.registerWebhookReceipt("stripe", externalEventId, event);
+      const eventType = String(event.type ?? "");
+
+      this.logger.info("billing.webhook_received", {
+        status: 200,
+        provider: "stripe",
+        externalEventId,
+        eventType
       });
+
+      if (duplicate) {
+        this.logger.info("billing.webhook_processed", {
+          status: 200,
+          provider: "stripe",
+          externalEventId,
+          eventType,
+          duplicate: true
+        });
+        return { received: true, duplicate: true };
+      }
+
+      const object = ((event.data as Record<string, unknown> | undefined)?.object ??
+        {}) as StripeWebhookObject;
+
+      if (
+        eventType === "checkout.session.completed" ||
+        eventType === "checkout.session.async_payment_succeeded"
+      ) {
+        await this.handleStripeCheckoutCompletion(object);
+      } else if (
+        eventType === "customer.subscription.created" ||
+        eventType === "customer.subscription.updated"
+      ) {
+        await this.handleStripeSubscriptionUpdate(object as StripeSubscriptionWebhookObject);
+      } else if (eventType === "customer.subscription.deleted") {
+        await this.handleStripeSubscriptionCancellation(object as StripeSubscriptionWebhookObject);
+      } else if (eventType === "invoice.payment_failed") {
+        await this.handleStripeInvoiceFailure(object as Record<string, unknown>);
+      }
+
+      await this.markWebhookProcessed("stripe", externalEventId);
+      this.logger.info("billing.webhook_processed", {
+        status: 200,
+        provider: "stripe",
+        externalEventId,
+        eventType
+      });
+      return { received: true };
+    } catch (error) {
+      this.logger.warn("billing.webhook_failed", {
+        status: error instanceof BadRequestException ? 400 : 503,
+        errorCode:
+          error instanceof Error ? error.name : "BILLING_WEBHOOK_PROCESSING_FAILED",
+        provider: "stripe"
+      });
+      throw error;
     }
-
-    const duplicate = await this.registerWebhookReceipt("stripe", externalEventId, event);
-    if (duplicate) {
-      return { received: true, duplicate: true };
-    }
-
-    const eventType = String(event.type ?? "");
-    const object = ((event.data as Record<string, unknown> | undefined)?.object ??
-      {}) as StripeWebhookObject;
-
-    if (eventType === "checkout.session.completed" || eventType === "checkout.session.async_payment_succeeded") {
-      await this.handleStripeCheckoutCompletion(object);
-    } else if (eventType === "customer.subscription.created" || eventType === "customer.subscription.updated") {
-      await this.handleStripeSubscriptionUpdate(object as StripeSubscriptionWebhookObject);
-    } else if (eventType === "customer.subscription.deleted") {
-      await this.handleStripeSubscriptionCancellation(object as StripeSubscriptionWebhookObject);
-    } else if (eventType === "invoice.payment_failed") {
-      await this.handleStripeInvoiceFailure(object as Record<string, unknown>);
-    }
-
-    await this.markWebhookProcessed("stripe", externalEventId);
-    return { received: true };
   }
 
   async handleRazorpayWebhook(
@@ -1094,42 +1157,80 @@ export class CommerceService {
     signatureHeader: string | undefined,
     eventIdHeader: string | undefined
   ) {
-    const event = this.billingService.verifyRazorpayWebhook(rawBody, signatureHeader) as RazorpayWebhookPayload;
-    const externalEventId = eventIdHeader || `${event.event ?? "unknown"}:${event.created_at ?? Date.now()}`;
+    try {
+      const event = this.billingService.verifyRazorpayWebhook(
+        rawBody,
+        signatureHeader
+      ) as RazorpayWebhookPayload;
+      const externalEventId =
+        eventIdHeader || `${event.event ?? "unknown"}:${event.created_at ?? Date.now()}`;
+      const duplicate = await this.registerWebhookReceipt(
+        "razorpay",
+        externalEventId,
+        event as Record<string, unknown>
+      );
 
-    const duplicate = await this.registerWebhookReceipt("razorpay", externalEventId, event as Record<string, unknown>);
-    if (duplicate) {
-      return { received: true, duplicate: true };
+      this.logger.info("billing.webhook_received", {
+        status: 200,
+        provider: "razorpay",
+        externalEventId,
+        eventType: event.event ?? "unknown"
+      });
+
+      if (duplicate) {
+        this.logger.info("billing.webhook_processed", {
+          status: 200,
+          provider: "razorpay",
+          externalEventId,
+          eventType: event.event ?? "unknown",
+          duplicate: true
+        });
+        return { received: true, duplicate: true };
+      }
+
+      switch (event.event) {
+        case "order.paid":
+        case "payment.captured":
+          await this.handleRazorpayOrderPaid(event);
+          break;
+        case "payment.failed":
+          await this.handleRazorpayPaymentFailed(event);
+          break;
+        case "subscription.authenticated":
+          await this.handleRazorpaySubscriptionUpdate(event, "pending");
+          break;
+        case "subscription.activated":
+        case "subscription.charged":
+          await this.handleRazorpaySubscriptionUpdate(event, "active");
+          break;
+        case "subscription.pending":
+        case "subscription.halted":
+          await this.handleRazorpaySubscriptionUpdate(event, "payment_failed");
+          break;
+        case "subscription.cancelled":
+          await this.handleRazorpaySubscriptionUpdate(event, "cancelled");
+          break;
+        default:
+          break;
+      }
+
+      await this.markWebhookProcessed("razorpay", externalEventId);
+      this.logger.info("billing.webhook_processed", {
+        status: 200,
+        provider: "razorpay",
+        externalEventId,
+        eventType: event.event ?? "unknown"
+      });
+      return { received: true };
+    } catch (error) {
+      this.logger.warn("billing.webhook_failed", {
+        status: error instanceof BadRequestException ? 400 : 503,
+        errorCode:
+          error instanceof Error ? error.name : "BILLING_WEBHOOK_PROCESSING_FAILED",
+        provider: "razorpay"
+      });
+      throw error;
     }
-
-    switch (event.event) {
-      case "order.paid":
-      case "payment.captured":
-        await this.handleRazorpayOrderPaid(event);
-        break;
-      case "payment.failed":
-        await this.handleRazorpayPaymentFailed(event);
-        break;
-      case "subscription.authenticated":
-        await this.handleRazorpaySubscriptionUpdate(event, "pending");
-        break;
-      case "subscription.activated":
-      case "subscription.charged":
-        await this.handleRazorpaySubscriptionUpdate(event, "active");
-        break;
-      case "subscription.pending":
-      case "subscription.halted":
-        await this.handleRazorpaySubscriptionUpdate(event, "payment_failed");
-        break;
-      case "subscription.cancelled":
-        await this.handleRazorpaySubscriptionUpdate(event, "cancelled");
-        break;
-      default:
-        break;
-    }
-
-    await this.markWebhookProcessed("razorpay", externalEventId);
-    return { received: true };
   }
 
   private async handleStripeCheckoutCompletion(object: StripeWebhookObject) {

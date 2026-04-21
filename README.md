@@ -9,13 +9,17 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 - Phase 0 shared foundation is complete
 - Phase 1 auth, signup, fitness, and coach workspace is now runtime-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
-- Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
+- Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`, and live provider validation is parked as a pending follow-up
 - Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented and repo-validated across `apps/api`, `apps/admin`, and `apps/mobile`
-- repo-level `lint`, `typecheck`, and `build` are green on the current Phase 4 branch baseline
-- live Stripe and Razorpay acceptance still requires real provider credentials plus webhook delivery
-- live Gemini responses still require a real `GEMINI_API_KEY`, but the platform stays usable when AI is unavailable
+- Phase 5 hardening, release readiness, readiness checks, trace IDs, structured logs, and smoke automation are now repo-validated across `apps/api`, `apps/web`, and `apps/admin`, with mobile still validated through the manual checklist
+- repo-level `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 baseline
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
+
+## Pending Follow-Ups
+
+- Phase 3 live Stripe and Razorpay acceptance with real credentials and webhook delivery
+- live Gemini provider acceptance with a real `GEMINI_API_KEY`
 
 ## Workspace Layout
 
@@ -36,6 +40,7 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 
 - Canonical delivery plan: [plan.md](./plan.md)
 - Architecture snapshot: [docs/architecture.md](./docs/architecture.md)
+- Release checklist: [docs/checklists/phase-5-release.md](./docs/checklists/phase-5-release.md)
 - Repo-level Codex memory: [.codex/skills/platform-project/SKILL.md](./.codex/skills/platform-project/SKILL.md)
 
 ## Local Development
@@ -84,6 +89,7 @@ Default local URLs:
 - web: `http://localhost:3000`
 - admin: `http://localhost:3001`
 - api: `http://localhost:4000/api/v1/health`
+- api readiness: `http://localhost:4000/api/v1/health/readiness`
 - mobile Metro: `http://localhost:8081`
 
 Quick API login test:
@@ -101,7 +107,15 @@ Invoke-RestMethod `
 - `corepack pnpm lint`
 - `corepack pnpm typecheck`
 - `corepack pnpm build`
+- `corepack pnpm smoke:setup`
+- `corepack pnpm smoke`
 - `corepack pnpm format`
+
+Smoke fixture accounts after `corepack pnpm smoke:setup`:
+
+- admin: `support@moveyou.app` / `dev-password`
+- coach: `coach.smoke@moveyou.app` / `dev-password`
+- user: `user.smoke@moveyou.app` / `dev-password`
 
 ## Current Scaffolded Routes
 
@@ -124,8 +138,9 @@ Invoke-RestMethod `
 - Phase 0: complete
 - Phase 1: accepted and runtime-validated
 - Phase 2: implemented and locally validated
-- Phase 3: implemented in code and repo-validated; live provider acceptance pending credentials and webhook testing
+- Phase 3: implemented in code and repo-validated; live provider acceptance is parked as a pending follow-up
 - Phase 4: implemented and repo-validated; live Gemini acceptance pending `GEMINI_API_KEY`
+- Phase 5: implemented and repo-validated for request tracing, readiness, logs, smoke coverage, CI smoke setup, and release checklists
 
 ## Git Workflow
 

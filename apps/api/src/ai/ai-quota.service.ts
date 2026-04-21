@@ -12,6 +12,7 @@ import { getAdminAiQuotaPolicy, getUserAiQuotaPolicy } from "@platform/ai";
 import { getBrandPack } from "@platform/brand";
 import { platformConfig, runtimeEnv } from "@platform/config";
 import { createApiException } from "../common/api-error.util";
+import { PlatformLogger } from "../observability/platform-logger.service";
 import { PrismaService } from "../prisma/prisma.service";
 
 const userAiFeatures = ["user_workout_recommendation", "user_reset_recommendation"] as const;
@@ -19,7 +20,10 @@ const adminAiFeatures = ["admin_workout_draft", "admin_relaxation_draft"] as con
 
 @Injectable()
 export class AiQuotaService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: PlatformLogger
+  ) {}
 
   async getUserQuotaStatus(user: CurrentUser): Promise<UserAiQuotaStatus> {
     const plan = await this.resolveCurrentPlan(user.id);
@@ -39,6 +43,14 @@ export class AiQuotaService {
     const availability = quota.features[feature];
 
     if (availability.status !== "available") {
+      this.logger.warn("ai.quota_blocked", {
+        status: availability.code === "AI_QUOTA_EXCEEDED" ? 429 : 503,
+        errorCode: availability.code,
+        userId: user.id,
+        role: user.role,
+        brand: user.activeBrand,
+        feature
+      });
       await this.recordUsage({
         user,
         feature,
@@ -60,6 +72,14 @@ export class AiQuotaService {
     const availability = quota.features[feature];
 
     if (availability.status !== "available") {
+      this.logger.warn("ai.quota_blocked", {
+        status: availability.code === "AI_QUOTA_EXCEEDED" ? 429 : 503,
+        errorCode: availability.code,
+        userId: user.id,
+        role: user.role,
+        brand: user.activeBrand,
+        feature
+      });
       await this.recordUsage({
         user,
         feature,
