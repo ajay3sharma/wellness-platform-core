@@ -21,7 +21,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - `@platform/billing`: market-based provider selection and billing interfaces
 - `@platform/ai`: free-tier-only AI defaults and quota helpers
 - `@platform/sdk`: typed API client for auth, workouts, wellness, commerce, and AI flows
-- `@platform/ui`: brand-aware UI token helpers for the future design system
+- `@platform/ui`: brand-aware claymorphism token helpers, route theme helpers, light/dark surface profiles, and shared UI foundations
 
 ## Branding
 
@@ -29,6 +29,19 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - The first brand pack is `MoveYOU`
 - The app name, tagline, SEO copy, support email, assets, deep links, and theme tokens come from brand config
 - Feature modules should never hardcode the active product name
+
+## Design System
+
+- The current UI baseline is Base44-inspired claymorphism wellness: soft pastel route surfaces, rounded clay cards, slate/navy text, orange focus actions, and gentle neumorphic shadows across `apps/web`, `apps/admin`, and `apps/mobile`
+- `BrandPack.theme` resolves mode-aware semantic design tokens plus route themes instead of flat brand colors
+- Retained infrastructure includes `ThemeMode`, persisted light/dark preference, shared token resolution, web/admin CSS variables, and mobile React Native token primitives
+- Shared token groups cover color semantics for canvas, surfaces, text, borders, orange focus actions, pastel route identities, status states, `Inter`/system sans typography, spacing, radius, clay shadow, and motion
+- Route themes are shared for `home`, `workouts`, `reset`, `store`, `progress`, `admin`, and `profile`
+- `@platform/ui` resolves per-surface theme snapshots and density profiles so all apps use the same system while allowing modest layout tuning for `web`, `admin`, and `mobile`
+- Light mode uses `#FAFAFA` canvas, white clay cards, slate text, pastel route backgrounds, and `#FF6A00` focus actions
+- Dark mode uses deep slate canvas, lifted charcoal cards, off-white text, pastel route accents, and subdued clay shadows derived from the light palette
+- Removed visual patterns should stay removed: Apple-blue neutral baseline, flat gray cards, generic SaaS shells, and feature-local color constants
+- Screenshot capture is the intended visual proof set; the latest Base44 reset evidence was regenerated from Postgres-backed smoke fixtures under `test-results/screenshots/`
 
 ## Billing
 
@@ -79,6 +92,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
   - readiness checks for database, billing config, and AI config
   - structured API logs for auth, access denials, checkout, webhook processing, and AI failures
   - deterministic smoke fixtures plus Playwright smoke coverage for API, web, and admin
+- Base44 claymorphism UI reset is implemented across web, admin, and mobile and validated with `typecheck`, `lint`, `build`, `smoke:setup`, `smoke`, and `screenshots`
 - Live provider checkout acceptance still depends on real Stripe and Razorpay credentials plus webhook delivery
 
 ## AI Constraints
@@ -96,8 +110,10 @@ Root workflow:
 1. `corepack pnpm install`
 2. `Copy-Item .env.example .env`
 3. `corepack pnpm dev`
-4. `corepack pnpm smoke:setup`
-5. `corepack pnpm smoke`
+4. Confirm Postgres is reachable through `DATABASE_URL`
+5. `corepack pnpm smoke:setup`
+6. `corepack pnpm smoke`
+7. `corepack pnpm screenshots`
 
 Root shortcuts:
 
@@ -105,6 +121,7 @@ Root shortcuts:
 - `corepack pnpm dev:admin`
 - `corepack pnpm dev:api`
 - `corepack pnpm dev:mobile`
+- `corepack pnpm dev:mobile:web`
 
 The repo-level dev entry points load the root `.env` before starting each workspace so local API base URLs and bootstrap credentials stay aligned across surfaces.
 
@@ -114,6 +131,7 @@ Default local ports:
 - admin: `3001`
 - api: `4000`
 - Expo Metro: `8081`
+- Screenshot artifacts: `test-results/screenshots`
 
 ## Current Surfaces
 
@@ -169,6 +187,7 @@ The bootstrap is considered healthy when:
 2. workspace detection sees all apps and packages
 3. `corepack pnpm dev` can boot web, admin, API, and mobile together
 4. `corepack pnpm lint`, `corepack pnpm typecheck`, and `corepack pnpm build` all pass
-5. `corepack pnpm smoke:setup` and `corepack pnpm smoke` validate the seeded browser and API baseline
-6. the API health endpoint returns `ok` at `/api/v1/health` and readiness reflects dependency state at `/api/v1/health/readiness`
-7. apps resolve brand metadata from shared packages rather than hardcoded strings
+5. `corepack pnpm smoke:setup` and `corepack pnpm smoke` validate the seeded browser and API baseline after Postgres is reachable
+6. `corepack pnpm screenshots` captures current web, admin, and Expo web mobile surfaces into `test-results/screenshots` after seeded fixtures exist
+7. the API health endpoint returns `ok` at `/api/v1/health` and readiness reflects dependency state at `/api/v1/health/readiness`
+8. apps resolve brand metadata from shared packages rather than hardcoded strings

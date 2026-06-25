@@ -1,6 +1,5 @@
 import { getBrandMetadata, getBrandPack } from "@platform/brand";
 import { platformConfig, runtimeEnv } from "@platform/config";
-import { createSurfaceTheme } from "@platform/ui";
 import type { AppMetadataSnapshot } from "@platform/types";
 
 const brand = getBrandPack();
@@ -8,8 +7,6 @@ const brand = getBrandPack();
 export const webBrand = brand;
 export const webAppMetadata: AppMetadataSnapshot = getBrandMetadata("web");
 export const webTitleTemplate = brand.metadata.titleTemplate;
-
-export const webTheme = createSurfaceTheme(brand, "web");
 
 export const webNavigation = [
   { href: "/", label: "Home" },
@@ -19,9 +16,9 @@ export const webNavigation = [
 ] as const;
 
 export const webStats = [
-  { value: "12", label: "week training blocks" },
-  { value: "24/7", label: "brand-aware access" },
-  { value: "1", label: "shared identity layer" }
+  { value: "12", label: "week plans" },
+  { value: "24/7", label: "member access" },
+  { value: "1", label: "account" }
 ] as const;
 
 export const webPillars = [
@@ -35,14 +32,14 @@ export const webPillars = [
   },
   {
     title: "Grow",
-    description: "Commerce, subscriptions, and account journeys designed to evolve with the platform."
+    description: "Memberships and digital products stay connected to your account."
   }
 ] as const;
 
 export const webHighlights = [
-  "Brand metadata is resolved from `packages/brand`.",
-  "Auth, config, and client contracts are shared across surfaces.",
-  "The visual system is built from local CSS variables, not scattered overrides."
+  "Your account keeps orders, products, and plans together.",
+  "Store checkout opens through a single secure flow.",
+  "The interface adapts to the selected brand and theme mode."
 ] as const;
 
 export const webSurfaceCopy = {

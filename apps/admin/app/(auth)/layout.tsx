@@ -5,5 +5,9 @@ interface AuthLayoutProps {
 }
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
-  return <main className="admin-auth-shell">{children}</main>;
+  return (
+    <main className="admin-auth-shell" data-route-theme="admin">
+      {children}
+    </main>
+  );
 }

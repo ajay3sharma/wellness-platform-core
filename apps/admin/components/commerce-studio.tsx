@@ -281,7 +281,7 @@ export function CommerceStudio() {
             <p className="eyebrow">Commerce</p>
             <h1 className="display-title">Admin-only workspace</h1>
             <p className="display-copy">
-              Product, pricing, and billing operations stay reserved for admins in Phase 3.
+              Product, pricing, and billing operations are reserved for admins.
             </p>
           </div>
         </section>
@@ -296,10 +296,9 @@ export function CommerceStudio() {
           <p className="eyebrow">Commerce Studio</p>
           <h1 className="display-title">Manage products, plans, and billing operations.</h1>
           <p className="display-copy">
-            Phase 3 turns the commerce workspace into a real source of truth for digital catalog,
-            subscriptions, and operational monitoring.
+            Keep digital products, memberships, orders, and subscriptions easy to review.
           </p>
-          {error ? <p style={{ color: "#8a2c2b" }}>{error}</p> : null}
+          {error ? <p style={{ color: "var(--theme-danger)" }}>{error}</p> : null}
         </div>
 
         <div className="hero-grid">

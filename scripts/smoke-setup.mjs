@@ -3,6 +3,7 @@ import { spawn } from "node:child_process";
 import { loadWorkspaceEnv } from "./load-workspace-env.mjs";
 
 const root = process.cwd();
+const nodeCommand = process.execPath;
 loadWorkspaceEnv(root);
 
 const env = {
@@ -17,8 +18,7 @@ async function run(command, args) {
     const child = spawn(command, args, {
       cwd: root,
       env,
-      stdio: "inherit",
-      shell: process.platform === "win32"
+      stdio: "inherit"
     });
 
     child.on("exit", (code) => {
@@ -34,16 +34,6 @@ async function run(command, args) {
   });
 }
 
-await run("corepack", ["pnpm", "--filter", "@platform/api", "prisma:generate"]);
-await run("corepack", [
-  "pnpm",
-  "--filter",
-  "@platform/api",
-  "exec",
-  "prisma",
-  "db",
-  "push",
-  "--schema",
-  "prisma/schema.prisma"
-]);
-await run("node", ["./apps/api/scripts/seed-smoke.mjs"]);
+await run(nodeCommand, ["./scripts/run-workspace-script.mjs", "@platform/api", "prisma:generate"]);
+await run(nodeCommand, ["./scripts/run-workspace-script.mjs", "@platform/api", "prisma:push"]);
+await run(nodeCommand, ["./apps/api/scripts/seed-smoke.mjs"]);

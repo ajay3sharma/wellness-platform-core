@@ -13,7 +13,8 @@ This file is the canonical execution plan for `wellness-platform-core`. It defin
 - Phase 2 wellness is implemented and locally validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`
 - Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented in code across `apps/api`, `apps/admin`, and `apps/mobile`
-- Root `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 repo baseline
+- Base44-inspired claymorphism UI reset is implemented in the current working tree across `apps/web`, `apps/admin`, and `apps/mobile`
+- Validation for the clay UI reset passed with `typecheck`, `lint`, `build`, Postgres-backed `smoke:setup`, `smoke`, and `screenshots`
 - Phase 3 live Stripe and Razorpay acceptance is intentionally parked as a pending follow-up
 - Live Gemini provider acceptance still requires a real `GEMINI_API_KEY`
 
@@ -319,6 +320,19 @@ Phase 5 is now repo-validated on the current baseline, including:
 - GitHub Actions smoke job definition with Postgres-backed setup
 - Phase 5 release checklist docs plus manual mobile validation guidance
 
+## Current UI Baseline: Base44 Claymorphism Reset
+
+The active UI baseline has been reset from the Apple-neutral pass to a Base44-inspired claymorphism wellness system across `web`, `admin`, and `mobile`.
+
+- Keep the retained infrastructure: `ThemeMode`, persisted light/dark preference, shared token resolution, web/admin CSS variables, and mobile token primitives
+- Use the attached Base44 color spec as the current source of truth: `#FAFAFA` canvas, slate text `#334155`, white clay cards, orange focus accent `#FF6A00`, and route colors for home, workouts, reset, store, progress, admin, and profile
+- Keep typography simple with `Inter, system-ui, sans-serif`, relaxed line-height, and light display headings
+- Use rounded clay cards, pastel panels, route-colored chips, gentle neumorphic shadows, and calm whitespace
+- Keep dark mode as a derived clay companion with deep slate canvas, charcoal cards, pastel accents, and readable off-white text
+- Do not reintroduce Apple-blue neutral styling as the active baseline
+- Current validation after this reset passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm smoke:setup`, `corepack pnpm smoke`, and `corepack pnpm screenshots`
+- Visual screenshot evidence was regenerated under `test-results/screenshots/` with the Base44 claymorphism baseline
+
 ## Pending Follow-Ups
 
 - Phase 3 live billing validation:
@@ -350,4 +364,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The canonical implementation phases are now repo-validated through **Phase 5**. The remaining tracked follow-ups are **Phase 3 live billing validation** and **live Gemini acceptance**, both to be resumed explicitly when needed.
+The canonical implementation phases are now repo-validated through **Phase 5**. The current UI baseline is the Base44 claymorphism reset and has screenshot evidence under `test-results/screenshots/`. Remaining tracked follow-ups are **Phase 3 live billing validation** and **live Gemini acceptance**, each to be resumed explicitly when needed.

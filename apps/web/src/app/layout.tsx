@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
-import { webSurfaceCopy, webTheme, webTitleTemplate } from "../lib/site";
+import { createSurfaceTheme, createThemeCssVariables, DEFAULT_THEME_MODE } from "@platform/ui";
+import { webBrand, webSurfaceCopy, webTitleTemplate } from "../lib/site";
+import { WebThemeProvider } from "../lib/theme";
 import { SiteShell } from "../components/site-shell";
 import { WebSessionProvider } from "../lib/session";
 import "./globals.css";
@@ -14,12 +16,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(webSurfaceCopy.publicUrl)
 };
 
-const cssVariables: CSSProperties & Record<string, string> = {
-  "--brand-primary": webTheme.colors.primary,
-  "--brand-secondary": webTheme.colors.secondary,
-  "--brand-accent": webTheme.colors.accent,
-  "--brand-surface": webTheme.colors.surface
-};
+const cssVariables: CSSProperties & Record<string, string> = createThemeCssVariables(
+  createSurfaceTheme(webBrand, "web", DEFAULT_THEME_MODE)
+);
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -27,11 +26,13 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body style={cssVariables}>
-        <WebSessionProvider>
-          <SiteShell>{children}</SiteShell>
-        </WebSessionProvider>
+    <html data-theme={DEFAULT_THEME_MODE} lang="en" suppressHydrationWarning>
+      <body data-theme={DEFAULT_THEME_MODE} style={cssVariables}>
+        <WebThemeProvider>
+          <WebSessionProvider>
+            <SiteShell>{children}</SiteShell>
+          </WebSessionProvider>
+        </WebThemeProvider>
       </body>
     </html>
   );

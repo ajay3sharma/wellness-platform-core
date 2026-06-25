@@ -6,6 +6,7 @@ import { createApiClient } from "@platform/sdk";
 import type { ApiError, MusicTrackDetail } from "@platform/types";
 import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 import { formatClock, formatDurationLabel } from "../../src/wellness";
 
 export default function MusicTrackScreen() {
@@ -22,6 +23,7 @@ export default function MusicTrackScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const { theme } = useThemeMode();
   const player = useAudioPlayer(track?.audioUrl ?? null, {
     updateInterval: 500
   });
@@ -82,68 +84,68 @@ export default function MusicTrackScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="reset">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
         <ActionButton label="Back to reset" onPress={() => router.back()} variant="secondary" />
 
         {loading ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>Loading track...</Text>
+          <Surface compact routeTheme="reset">
+            <Text style={{ color: theme.colors.textMuted }}>Loading track...</Text>
           </Surface>
         ) : null}
 
         {track ? (
           <>
-            <Surface>
+            <Surface routeTheme="reset">
               <SectionTitle
                 eyebrow="Music"
                 title={track.title}
                 subtitle={`${track.artistName} • ${formatDurationLabel(track.durationSeconds)}`}
               />
-              <Text style={{ color: "#607084", lineHeight: 20 }}>{track.description}</Text>
+              <Text style={{ color: theme.colors.textMuted, lineHeight: 20 }}>{track.description}</Text>
               {track.category ? (
-                <Text style={{ color: "#607084", marginTop: 10 }}>{track.category}</Text>
+                <Text style={{ color: theme.colors.textMuted, marginTop: 10 }}>{track.category}</Text>
               ) : null}
             </Surface>
 
-            <Surface>
+            <Surface routeTheme="reset">
               <SectionTitle
                 eyebrow="Player"
                 title={status.playing ? "Now playing" : "Ready to play"}
-                subtitle="Phase 2 keeps playback simple: play, pause, stop, and progress display."
+                subtitle="Play, pause, stop, and follow the track progress."
               />
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
                 <View
                   style={{
                     flexBasis: "48%",
-                    borderRadius: 20,
+                    borderRadius: 12,
                     padding: 14,
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: theme.colors.surface,
                     borderWidth: 1,
-                    borderColor: "rgba(18, 32, 54, 0.08)"
+                    borderColor: theme.colors.borderSoft
                   }}
                 >
-                  <Text style={{ color: "#607084", fontSize: 12, textTransform: "uppercase" }}>
+                  <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: "600" }}>
                     Position
                   </Text>
-                  <Text style={{ fontSize: 22, fontWeight: "700", color: "#122036", marginTop: 6 }}>
+                  <Text style={{ fontSize: 22, fontWeight: "700", color: theme.colors.textStrong, marginTop: 6 }}>
                     {formatClock(Math.round(status.currentTime ?? 0))}
                   </Text>
                 </View>
                 <View
                   style={{
                     flexBasis: "48%",
-                    borderRadius: 20,
+                    borderRadius: 12,
                     padding: 14,
-                    backgroundColor: "#FFFFFF",
+                    backgroundColor: theme.colors.surface,
                     borderWidth: 1,
-                    borderColor: "rgba(18, 32, 54, 0.08)"
+                    borderColor: theme.colors.borderSoft
                   }}
                 >
-                  <Text style={{ color: "#607084", fontSize: 12, textTransform: "uppercase" }}>
+                  <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: "600" }}>
                     Duration
                   </Text>
-                  <Text style={{ fontSize: 22, fontWeight: "700", color: "#122036", marginTop: 6 }}>
+                  <Text style={{ fontSize: 22, fontWeight: "700", color: theme.colors.textStrong, marginTop: 6 }}>
                     {formatClock(Math.round(status.duration || track.durationSeconds))}
                   </Text>
                 </View>
@@ -161,14 +163,14 @@ export default function MusicTrackScreen() {
         ) : null}
 
         {playbackError ? (
-          <Surface compact>
-            <Text style={{ color: "#A94442" }}>{playbackError}</Text>
+          <Surface compact routeTheme="reset">
+            <Text style={{ color: theme.colors.danger }}>{playbackError}</Text>
           </Surface>
         ) : null}
 
         {error ? (
-          <Surface compact>
-            <Text style={{ color: "#A94442" }}>{error}</Text>
+          <Surface compact routeTheme="reset">
+            <Text style={{ color: theme.colors.danger }}>{error}</Text>
           </Surface>
         ) : null}
       </ScrollView>

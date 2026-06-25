@@ -2,12 +2,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { Text } from "react-native";
 import { Screen, Surface } from "../src/components/ui";
+import { useThemeMode } from "../src/theme/theme-context";
 
 export default function CheckoutReturnScreen() {
   const params = useLocalSearchParams<{
     status?: string;
     checkoutSessionId?: string;
   }>();
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -24,12 +26,12 @@ export default function CheckoutReturnScreen() {
   }, [params.checkoutSessionId, params.status]);
 
   return (
-    <Screen>
-      <Surface>
-        <Text style={{ fontSize: 20, fontWeight: "700", color: "#122036" }}>
+    <Screen routeTheme="store">
+      <Surface routeTheme="store">
+        <Text style={{ fontSize: 20, fontWeight: "700", color: theme.colors.textStrong }}>
           Returning to store
         </Text>
-        <Text style={{ color: "#607084", marginTop: 8 }}>
+        <Text style={{ color: theme.colors.textMuted, marginTop: 8 }}>
           The app is syncing your latest checkout status now.
         </Text>
       </Surface>

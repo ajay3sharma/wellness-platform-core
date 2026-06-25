@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import type { CSSProperties, ReactNode } from "react";
+import { createSurfaceTheme, createThemeCssVariables, DEFAULT_THEME_MODE } from "@platform/ui";
 import { adminBrand, adminMetadata } from "../lib/brand";
+import { AdminThemeProvider } from "../lib/theme";
 import { AdminSessionProvider } from "../lib/session";
 import "./globals.css";
 
@@ -26,16 +28,16 @@ interface RootLayoutProps {
 }
 
 export default function RootLayout({ children }: RootLayoutProps) {
-  const themeStyle = {
-    "--brand-primary": adminBrand.theme.primary,
-    "--brand-accent": adminBrand.theme.accent,
-    "--brand-surface": adminBrand.theme.surface
-  } as CSSProperties;
+  const themeStyle = createThemeCssVariables(
+    createSurfaceTheme(adminBrand, "admin", DEFAULT_THEME_MODE)
+  ) as CSSProperties;
 
   return (
-    <html lang="en">
-      <body style={themeStyle}>
-        <AdminSessionProvider>{children}</AdminSessionProvider>
+    <html data-theme={DEFAULT_THEME_MODE} lang="en" suppressHydrationWarning>
+      <body data-theme={DEFAULT_THEME_MODE} style={themeStyle}>
+        <AdminThemeProvider>
+          <AdminSessionProvider>{children}</AdminSessionProvider>
+        </AdminThemeProvider>
       </body>
     </html>
   );

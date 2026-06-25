@@ -10,6 +10,7 @@
     "start": "node dist/apps/api/src/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema prisma/schema.prisma --accept-data-loss",
     "prisma:validate": "prisma validate --schema prisma/schema.prisma"
   },
   "dependencies": {

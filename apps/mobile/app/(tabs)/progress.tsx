@@ -4,6 +4,7 @@ import { createApiClient } from "@platform/sdk";
 import type { ApiError, WorkoutSessionSummary } from "@platform/types";
 import { Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 export default function ProgressScreen() {
   const { session } = useSession();
@@ -17,6 +18,7 @@ export default function ProgressScreen() {
   const [history, setHistory] = useState<WorkoutSessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session) {
@@ -40,69 +42,69 @@ export default function ProgressScreen() {
   const completedSessions = history.filter((item) => item.status === "completed");
 
   return (
-    <Screen>
+    <Screen routeTheme="progress">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
-        <Surface>
+        <Surface routeTheme="progress">
           <SectionTitle
             eyebrow="Progress"
             title="Workout history"
-            subtitle="Phase 1 keeps progress simple: completed sessions, exercise counts, and timestamps."
+            subtitle="See completed sessions, exercise counts, and timestamps."
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
             <View
               style={{
                 flexBasis: "48%",
-                borderRadius: 22,
-                padding: 16,
-                backgroundColor: "#FFFFFF",
+                borderRadius: 12,
+                padding: 14,
+                backgroundColor: theme.colors.surface,
                 borderWidth: 1,
-                borderColor: "rgba(18, 32, 54, 0.08)"
+                borderColor: theme.colors.borderSoft
               }}
             >
-              <Text style={{ color: "#607084", fontSize: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: "600" }}>
                 Completed
               </Text>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#122036", marginVertical: 6 }}>
+              <Text style={{ fontSize: 20, fontWeight: "700", color: theme.colors.textStrong, marginVertical: 6 }}>
                 {completedSessions.length}
               </Text>
-              <Text style={{ color: "#607084" }}>Finished workout sessions</Text>
+              <Text style={{ color: theme.colors.textMuted }}>Finished workout sessions</Text>
             </View>
             <View
               style={{
                 flexBasis: "48%",
-                borderRadius: 22,
-                padding: 16,
-                backgroundColor: "#FFFFFF",
+                borderRadius: 12,
+                padding: 14,
+                backgroundColor: theme.colors.surface,
                 borderWidth: 1,
-                borderColor: "rgba(18, 32, 54, 0.08)"
+                borderColor: theme.colors.borderSoft
               }}
             >
-              <Text style={{ color: "#607084", fontSize: 12, textTransform: "uppercase", letterSpacing: 1 }}>
+              <Text style={{ color: theme.colors.textMuted, fontSize: 12, fontWeight: "600" }}>
                 In progress
               </Text>
-              <Text style={{ fontSize: 20, fontWeight: "700", color: "#122036", marginVertical: 6 }}>
+              <Text style={{ fontSize: 20, fontWeight: "700", color: theme.colors.textStrong, marginVertical: 6 }}>
                 {history.length - completedSessions.length}
               </Text>
-              <Text style={{ color: "#607084" }}>Sessions still open</Text>
+              <Text style={{ color: theme.colors.textMuted }}>Sessions still open</Text>
             </View>
           </View>
         </Surface>
 
-        {loading ? <Text style={{ color: "#607084" }}>Loading history...</Text> : null}
-        {error ? <Text style={{ color: "#A94442" }}>{error}</Text> : null}
+        {loading ? <Text style={{ color: theme.colors.textMuted }}>Loading history...</Text> : null}
+        {error ? <Text style={{ color: theme.colors.danger }}>{error}</Text> : null}
 
         {history.map((item) => (
-          <Surface compact key={item.id}>
+          <Surface compact key={item.id} routeTheme="progress">
             <View style={{ gap: 6 }}>
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>{item.workoutTitle}</Text>
-              <Text style={{ color: "#607084" }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>{item.workoutTitle}</Text>
+              <Text style={{ color: theme.colors.textMuted }}>
                 {item.completedExercises}/{item.totalExercises} exercises completed
               </Text>
-              <Text style={{ color: "#607084" }}>
+              <Text style={{ color: theme.colors.textMuted }}>
                 Started {new Date(item.startedAt).toLocaleString()}
               </Text>
               {item.completedAt ? (
-                <Text style={{ color: "#607084" }}>
+                <Text style={{ color: theme.colors.textMuted }}>
                   Finished {new Date(item.completedAt).toLocaleString()}
                 </Text>
               ) : null}
@@ -111,22 +113,22 @@ export default function ProgressScreen() {
                   alignSelf: "flex-start",
                   paddingHorizontal: 10,
                   paddingVertical: 6,
-                  borderRadius: 999,
+                  borderRadius: 8,
                   backgroundColor:
                     item.status === "completed"
-                      ? "rgba(47, 111, 87, 0.12)"
-                      : "rgba(217, 125, 84, 0.16)"
+                      ? `${theme.colors.success}18`
+                      : `${theme.colors.warning}18`
                 }}
               >
-                <Text style={{ color: "#122036", fontWeight: "700" }}>{item.status}</Text>
+                <Text style={{ color: theme.colors.textStrong, fontWeight: "700" }}>{item.status}</Text>
               </View>
             </View>
           </Surface>
         ))}
 
         {!loading && history.length === 0 ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>
+          <Surface compact routeTheme="progress">
+            <Text style={{ color: theme.colors.textMuted }}>
               No workout history yet. Start a session from the workouts tab to see progress here.
             </Text>
           </Surface>

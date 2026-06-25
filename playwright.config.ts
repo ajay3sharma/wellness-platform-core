@@ -1,6 +1,7 @@
 import { defineConfig } from "@playwright/test";
 
 const reuseExistingServer = !process.env.CI;
+const useExternalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === "1";
 
 export default defineConfig({
   testDir: "./smoke",
@@ -10,7 +11,9 @@ export default defineConfig({
   use: {
     trace: "retain-on-failure"
   },
-  webServer: [
+  webServer: useExternalServers
+    ? undefined
+    : [
     {
       command: "corepack pnpm dev:api",
       url: "http://localhost:4000/api/v1/health",

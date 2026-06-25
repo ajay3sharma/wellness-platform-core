@@ -31,7 +31,7 @@ function formatAdminAiValue(quota: AdminAiQuotaStatus | null, role: string) {
 
 function formatAdminAiDetail(quota: AdminAiQuotaStatus | null, role: string) {
   if (role !== "admin") {
-    return "Coach workspaces stay outside AI authoring in Phase 4.";
+    return "Coach workspaces do not include AI authoring.";
   }
 
   if (!quota) {
@@ -160,7 +160,7 @@ export default function DashboardPage() {
       <section className="section-grid cols-3">
         <SectionCard
           title="Programs"
-          description="The current baseline now covers workouts, coaching workflows, and admin-managed wellness content."
+          description="Workouts, coaching, and wellness content are ready to manage from this workspace."
         >
           <div className="stack-tight">
             <div className="pill">Persisted auth and protected routes</div>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
         </SectionCard>
         <SectionCard
           title="Still next"
-          description="Commerce is live, while web AI, coach-facing AI, and non-critical polish remain outside the current Phase 4 slice."
+          description="A few live-provider checks remain parked while the product stays usable locally."
         >
           <div className="stack-tight">
             <div className="pill">No web AI surface yet</div>

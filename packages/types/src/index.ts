@@ -4,6 +4,15 @@ export type Market = "india" | "global";
 export type UserPlan = "free" | "plus" | "pro";
 export type Role = "user" | "coach" | "admin";
 export type AppSurface = "web" | "admin" | "mobile" | "api";
+export type ThemeMode = "light" | "dark";
+export type BrandRouteThemeKey =
+  | "home"
+  | "workouts"
+  | "reset"
+  | "store"
+  | "progress"
+  | "admin"
+  | "profile";
 export type WorkoutDifficulty = "beginner" | "intermediate" | "advanced";
 export type WorkoutStatus = "draft" | "published";
 export type ContentStatus = "draft" | "published";
@@ -36,6 +45,129 @@ export type AiAvailabilityStatus =
   | "temporarily_unavailable"
   | "disabled";
 
+export interface BrandThemeTypography {
+  displayFamily: string;
+  bodyFamily: string;
+  displayWeight: number;
+  bodyWeight: number;
+  uiLetterSpacing: string;
+  displayLetterSpacing: string;
+}
+
+export interface BrandThemeRadius {
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  pill: string;
+}
+
+export interface BrandThemeSpacing {
+  xs: number;
+  sm: number;
+  md: number;
+  lg: number;
+  xl: number;
+  xxl: number;
+}
+
+export interface BrandThemeShadow {
+  soft: string;
+  medium: string;
+  strong: string;
+  glow: string;
+  inset: string;
+}
+
+export interface BrandThemeMotion {
+  fastMs: number;
+  baseMs: number;
+  slowMs: number;
+  easing: string;
+}
+
+export interface BrandThemeModeTokens {
+  primary: string;
+  secondary: string;
+  accent: string;
+  surface: string;
+  canvas: string;
+  canvasSoft: string;
+  surfaceRaised: string;
+  surfaceGlass: string;
+  textStrong: string;
+  textMuted: string;
+  borderSoft: string;
+  borderStrong: string;
+  primaryStrong: string;
+  accentSoft: string;
+  success: string;
+  warning: string;
+  danger: string;
+  highlight: string;
+  textOnPrimary: string;
+  textOnPrimaryMuted: string;
+}
+
+export interface BrandThemeModes {
+  light: BrandThemeModeTokens;
+  dark: BrandThemeModeTokens;
+}
+
+export interface BrandRouteThemeTokens {
+  primary: string;
+  primaryStrong: string;
+  background: string;
+  backgroundSoft: string;
+  textOnPrimary: string;
+}
+
+export type BrandRouteThemeSet = Record<BrandRouteThemeKey, BrandRouteThemeTokens>;
+
+export interface BrandRouteThemeModes {
+  light: BrandRouteThemeSet;
+  dark: BrandRouteThemeSet;
+}
+
+export type ThemePreference = ThemeMode;
+
+export interface BrandTheme {
+  modes: BrandThemeModes;
+  routeThemes: BrandRouteThemeModes;
+  typography: BrandThemeTypography;
+  radius: BrandThemeRadius;
+  spacing: BrandThemeSpacing;
+  shadow: BrandThemeShadow;
+  motion: BrandThemeMotion;
+}
+
+export interface SurfaceProfile {
+  density: "comfortable" | "compact";
+  contentMaxWidth: number;
+  heroPadding: number;
+  cardPadding: number;
+  navHeight: number;
+}
+
+export interface SurfaceThemeSnapshot {
+  mode: ThemeMode;
+  productName: string;
+  surface: AppSurface;
+  colors: BrandThemeModeTokens;
+  routeThemes: BrandRouteThemeSet;
+  defaultRouteTheme: BrandRouteThemeTokens;
+  typography: BrandThemeTypography;
+  radius: BrandThemeRadius;
+  spacing: BrandThemeSpacing;
+  shadow: BrandThemeShadow;
+  motion: BrandThemeMotion;
+  profile: SurfaceProfile;
+  headline: string;
+  subheadline: string;
+}
+
+export type ResolvedThemeSnapshot = SurfaceThemeSnapshot;
+
 export interface BrandPack {
   key: BrandKey;
   productName: string;
@@ -49,12 +181,7 @@ export interface BrandPack {
     api: string;
     mobileDeepLink: string;
   };
-  theme: {
-    primary: string;
-    secondary: string;
-    accent: string;
-    surface: string;
-  };
+  theme: BrandTheme;
   assets: {
     logoText: string;
     logoMark: string;

@@ -1,15 +1,22 @@
 import Link from "next/link";
-import { webHighlights, webPillars, webStats, webSurfaceCopy } from "../lib/site";
+import { webHighlights, webPillars, webStats } from "../lib/site";
 
 export default function HomePage() {
   return (
-    <div className="stack">
-      <section className="hero">
-        <div className="panel hero-copy">
-          <span className="eyebrow">White-label wellness platform</span>
-          <h1>{webSurfaceCopy.headline}</h1>
-          <p>{webSurfaceCopy.description}</p>
-          <div className="hero-actions">
+    <div className="stack" data-route-theme="home">
+      <section className="section-block">
+        <div className="home-welcome">
+          <h1>Good morning</h1>
+          <p>Ready to nourish your mind and body today?</p>
+        </div>
+
+        <div className="focus-card">
+          <span className="eyebrow">Today's focus</span>
+          <div className="focus-quote">"The body achieves what the mind believes."</div>
+          <p className="muted" style={{ margin: 0 }}>
+            A calm place for training, reset, membership, and progress.
+          </p>
+          <div className="hero-actions" style={{ justifyContent: "center" }}>
             <Link className="cta-pill" href="/account">
               Open dashboard
             </Link>
@@ -19,29 +26,28 @@ export default function HomePage() {
           </div>
         </div>
 
-        <aside className="panel hero-side">
-          <div className="stat-grid">
-            {webStats.map((stat) => (
-              <div className="stat-card" key={stat.label}>
-                <strong>{stat.value}</strong>
-                <span className="muted">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="note-card">
-            <div className="eyebrow">Current brand</div>
-            <h3 style={{ margin: "12px 0 8px" }}>{webSurfaceCopy.brandName}</h3>
-            <p className="muted" style={{ margin: 0, lineHeight: 1.7 }}>
-              The web shell reads its identity from shared brand config, so the same codebase can
-              rebrand without rewriting the UI.
-            </p>
-          </div>
-        </aside>
+        <h2 className="journey-title">Your Wellness Journey</h2>
+        <div className="journey-grid">
+          <article className="journey-card" data-route-theme="workouts">
+            <span className="route-orb">↯</span>
+            <strong>{webStats[0]?.value ?? "4"}</strong>
+            <span className="muted">{webStats[0]?.label ?? "Day streak"}</span>
+          </article>
+          <article className="journey-card" data-route-theme="progress">
+            <span className="route-orb">↗</span>
+            <strong>{webStats[1]?.value ?? "0/3"}</strong>
+            <span className="muted">{webStats[1]?.label ?? "This week"}</span>
+          </article>
+          <article className="journey-card" data-route-theme="store">
+            <span className="route-orb">◎</span>
+            <strong>{webStats[2]?.value ?? "42"}</strong>
+            <span className="muted">{webStats[2]?.label ?? "Total sessions"}</span>
+          </article>
+        </div>
       </section>
 
       <section className="panel section">
-        <h2>What this shell already frames</h2>
+        <h2>What is available</h2>
         <div className="feature-grid">
           {webPillars.map((item) => (
             <article className="feature-card" key={item.title}>
@@ -54,10 +60,10 @@ export default function HomePage() {
 
       <section className="info-band">
         <div className="panel metric-card">
-          <h2>Shared foundation</h2>
+          <h2>Account connected</h2>
           <p className="muted" style={{ lineHeight: 1.7 }}>
-            Auth, config, and SDK contracts are designed to stay shared across web, admin, mobile,
-            and API. The web surface uses the same brand and runtime config as the other apps.
+            Sign in once to keep membership, digital purchases, and order history attached to the
+            same account.
           </p>
           <div className="stack">
             {webHighlights.map((item) => (
@@ -73,22 +79,22 @@ export default function HomePage() {
           <div className="surface-grid">
             <div className="surface-card">
               <strong>Login</strong>
-              <p className="muted">Auth entry point and future JWT session handoff.</p>
+              <p className="muted">Sign in or create a member account.</p>
               <Link href="/login">Open route</Link>
             </div>
             <div className="surface-card">
               <strong>Account</strong>
-              <p className="muted">Profile, plan, and entitlement placeholder shell.</p>
+              <p className="muted">Profile, plan, products, and order history.</p>
               <Link href="/account">Open route</Link>
             </div>
             <div className="surface-card">
               <strong>Store</strong>
-              <p className="muted">Catalog and commerce placeholder shell.</p>
+              <p className="muted">Digital products and memberships.</p>
               <Link href="/store">Open route</Link>
             </div>
             <div className="surface-card">
-              <strong>Brand-ready layout</strong>
-              <p className="muted">All page identity comes from shared brand metadata.</p>
+              <strong>Home</strong>
+              <p className="muted">Return to the overview.</p>
               <Link href="/">Back home</Link>
             </div>
           </div>

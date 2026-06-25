@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
-import { adminBrand, adminMetadata, adminTheme } from "../lib/brand";
+import { adminBrand, adminMetadata } from "../lib/brand";
+import { ThemeModeToggle } from "./theme-mode-toggle";
 import { getVisibleNavigation } from "../lib/navigation";
 import { useAdminSession } from "../lib/session";
 
@@ -31,10 +32,7 @@ export function AdminShell({ children }: AdminShellProps) {
     return (
       <div className="admin-page-shell">
         <div className="admin-card">
-          <p className="eyebrow">Loading</p>
-          <h1 className="display-title" style={{ fontSize: "2rem" }}>
-            Preparing your workspace
-          </h1>
+          <h1 className="display-title" style={{ fontSize: "1.6rem" }}>Preparing workspace</h1>
           <p className="display-copy">Checking access and restoring the current session.</p>
         </div>
       </div>
@@ -44,9 +42,14 @@ export function AdminShell({ children }: AdminShellProps) {
   const user = session.user;
   const visibleGroups = getVisibleNavigation(user.role).filter((group) => group.items.length > 0);
   const isCoach = user.role === "coach";
+  const routeTheme = pathname.startsWith("/commerce")
+    ? "store"
+    : pathname.startsWith("/content")
+      ? "workouts"
+      : "admin";
 
   return (
-    <div className="admin-page-shell">
+    <div className="admin-page-shell" data-route-theme={routeTheme}>
       <div className="admin-shell-panel">
         <header className="admin-header">
           <div className="brand-lockup">
@@ -59,6 +62,7 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <div className="button-row">
+            <ThemeModeToggle />
             <span className="pill">
               <strong>{user.role}</strong>
               {isCoach ? "coach access" : "admin access"}
@@ -82,13 +86,10 @@ export function AdminShell({ children }: AdminShellProps) {
         <div className="admin-grid">
           <aside className="admin-sidebar">
             <div className="stack">
-              <div className="admin-card">
-                <p className="eyebrow">Protected Shell</p>
-                <h2 className="display-title" style={{ fontSize: "2rem" }}>
-                  {adminTheme.headline}
-                </h2>
-                <p className="display-copy" style={{ fontSize: "0.98rem" }}>
-                  {adminTheme.subheadline}
+              <div>
+                <p className="eyebrow">Workspace</p>
+                <p className="muted" style={{ margin: 0, lineHeight: 1.45 }}>
+                  {adminMetadata.subheadline}
                 </p>
               </div>
 
@@ -108,7 +109,6 @@ export function AdminShell({ children }: AdminShellProps) {
                           <br />
                           <span className="muted">{item.description}</span>
                         </span>
-                        <span aria-hidden="true">↗</span>
                       </Link>
                     ))}
                   </div>

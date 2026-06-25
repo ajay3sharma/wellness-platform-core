@@ -5,6 +5,7 @@ import { createApiClient } from "@platform/sdk";
 import type { ApiError, WorkoutDetail } from "@platform/types";
 import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 export default function WorkoutDetailScreen() {
   const { workoutId } = useLocalSearchParams<{ workoutId: string }>();
@@ -20,6 +21,7 @@ export default function WorkoutDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState(false);
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session || !workoutId) {
@@ -63,25 +65,25 @@ export default function WorkoutDetailScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="workouts">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
         <ActionButton label="Back to workouts" onPress={() => router.back()} variant="secondary" />
 
         {loading ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>Loading workout...</Text>
+          <Surface compact routeTheme="workouts">
+            <Text style={{ color: theme.colors.textMuted }}>Loading workout...</Text>
           </Surface>
         ) : null}
 
         {workout ? (
           <>
-            <Surface>
+            <Surface routeTheme="workouts">
               <SectionTitle
                 eyebrow="Workout detail"
                 title={workout.title}
                 subtitle={`${workout.durationMinutes} min • ${workout.difficulty}`}
               />
-              <Text style={{ color: "#607084", lineHeight: 20 }}>{workout.description}</Text>
+              <Text style={{ color: theme.colors.textMuted, lineHeight: 20 }}>{workout.description}</Text>
               {workout.assignment ? (
                 <View
                   style={{
@@ -89,11 +91,11 @@ export default function WorkoutDetailScreen() {
                     alignSelf: "flex-start",
                     paddingHorizontal: 12,
                     paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: "rgba(135, 168, 164, 0.18)"
+                    borderRadius: 8,
+                    backgroundColor: theme.colors.accentSoft
                   }}
                 >
-                  <Text style={{ fontWeight: "700", color: "#122036" }}>
+                  <Text style={{ fontWeight: "700", color: theme.colors.textStrong }}>
                     Assigned by {workout.assignment.coachDisplayName}
                   </Text>
                 </View>
@@ -101,13 +103,13 @@ export default function WorkoutDetailScreen() {
             </Surface>
 
             {workout.exercises.map((exercise) => (
-              <Surface compact key={exercise.id}>
+              <Surface compact key={exercise.id} routeTheme="workouts">
                 <View style={{ gap: 6 }}>
-                  <Text style={{ color: "#122036", fontSize: 18, fontWeight: "700" }}>
+                  <Text style={{ color: theme.colors.textStrong, fontSize: 18, fontWeight: "700" }}>
                     {exercise.sequence}. {exercise.name}
                   </Text>
-                  {exercise.instruction ? <Text style={{ color: "#607084" }}>{exercise.instruction}</Text> : null}
-                  <Text style={{ color: "#607084" }}>
+                  {exercise.instruction ? <Text style={{ color: theme.colors.textMuted }}>{exercise.instruction}</Text> : null}
+                  <Text style={{ color: theme.colors.textMuted }}>
                     {exercise.repTarget ?? "Open target"}
                     {exercise.timeTargetSeconds ? ` • ${exercise.timeTargetSeconds}s` : ""}
                     {exercise.distanceTargetMeters ? ` • ${exercise.distanceTargetMeters}m` : ""}
@@ -126,8 +128,8 @@ export default function WorkoutDetailScreen() {
         ) : null}
 
         {error ? (
-          <Surface compact>
-            <Text style={{ color: "#A94442" }}>{error}</Text>
+          <Surface compact routeTheme="workouts">
+            <Text style={{ color: theme.colors.danger }}>{error}</Text>
           </Surface>
         ) : null}
       </ScrollView>

@@ -5,6 +5,7 @@ import { createApiClient } from "@platform/sdk";
 import type { ApiError, WorkoutSessionRecord } from "@platform/types";
 import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 export default function WorkoutSessionScreen() {
   const { sessionId } = useLocalSearchParams<{ sessionId: string }>();
@@ -20,6 +21,7 @@ export default function WorkoutSessionScreen() {
   const [notes, setNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session || !sessionId) {
@@ -116,26 +118,26 @@ export default function WorkoutSessionScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="workouts">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
         <ActionButton label="Back" onPress={() => router.back()} variant="secondary" />
 
         {workoutSession ? (
           <>
-            <Surface>
+            <Surface routeTheme="workouts">
               <SectionTitle
                 eyebrow="Active workout"
                 title={workoutSession.workoutTitle}
                 subtitle={`Track each exercise and save your notes before finishing.`}
               />
-              <Text style={{ color: "#607084" }}>
+              <Text style={{ color: theme.colors.textMuted }}>
                 {workoutSession.exercises.filter((exercise) => exercise.completed).length}/
                 {workoutSession.exercises.length} exercises completed
               </Text>
             </Surface>
 
             {workoutSession.exercises.map((exercise) => (
-              <Surface compact key={exercise.id}>
+              <Surface compact key={exercise.id} routeTheme="workouts">
                 <View style={{ gap: 10 }}>
                   <Pressable
                     onPress={() => toggleExercise(exercise.id)}
@@ -149,18 +151,18 @@ export default function WorkoutSessionScreen() {
                       style={{
                         width: 22,
                         height: 22,
-                        borderRadius: 999,
+                        borderRadius: 11,
                         borderWidth: 2,
-                        borderColor: exercise.completed ? "#87A8A4" : "#B5C0CF",
-                        backgroundColor: exercise.completed ? "#87A8A4" : "transparent"
+                        borderColor: exercise.completed ? theme.colors.primaryStrong : theme.colors.borderStrong,
+                        backgroundColor: exercise.completed ? theme.colors.primaryStrong : "transparent"
                       }}
                     />
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontSize: 17, fontWeight: "700", color: "#122036" }}>
+                      <Text style={{ fontSize: 17, fontWeight: "700", color: theme.colors.textStrong }}>
                         {exercise.sequence}. {exercise.name}
                       </Text>
                       {exercise.instruction ? (
-                        <Text style={{ color: "#607084", marginTop: 4 }}>{exercise.instruction}</Text>
+                        <Text style={{ color: theme.colors.textMuted, marginTop: 4 }}>{exercise.instruction}</Text>
                       ) : null}
                     </View>
                   </Pressable>
@@ -168,15 +170,15 @@ export default function WorkoutSessionScreen() {
                     multiline
                     onChangeText={(value) => updateExerciseNote(exercise.id, value)}
                     placeholder="Optional exercise note"
-                    placeholderTextColor="#8A94A6"
+                    placeholderTextColor={theme.colors.textMuted}
                     style={{
                       minHeight: 84,
-                      borderRadius: 18,
-                      padding: 14,
-                      backgroundColor: "#FFFFFF",
+                      borderRadius: 10,
+                      padding: 12,
+                      backgroundColor: theme.colors.surface,
                       borderWidth: 1,
-                      borderColor: "rgba(18, 32, 54, 0.1)",
-                      color: "#122036"
+                      borderColor: theme.colors.borderSoft,
+                      color: theme.colors.textStrong
                     }}
                     value={exercise.notes ?? ""}
                   />
@@ -184,23 +186,23 @@ export default function WorkoutSessionScreen() {
               </Surface>
             ))}
 
-            <Surface compact>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: "#122036", marginBottom: 12 }}>
+            <Surface compact routeTheme="workouts">
+              <Text style={{ fontSize: 16, fontWeight: "700", color: theme.colors.textStrong, marginBottom: 12 }}>
                 Session note
               </Text>
               <TextInput
                 multiline
                 onChangeText={setNotes}
                 placeholder="How did this workout feel?"
-                placeholderTextColor="#8A94A6"
+                placeholderTextColor={theme.colors.textMuted}
                 style={{
                   minHeight: 96,
-                  borderRadius: 18,
-                  padding: 14,
-                  backgroundColor: "#FFFFFF",
+                  borderRadius: 10,
+                  padding: 12,
+                  backgroundColor: theme.colors.surface,
                   borderWidth: 1,
-                  borderColor: "rgba(18, 32, 54, 0.1)",
-                  color: "#122036"
+                  borderColor: theme.colors.borderSoft,
+                  color: theme.colors.textStrong
                 }}
                 value={notes}
               />
@@ -223,8 +225,8 @@ export default function WorkoutSessionScreen() {
         ) : null}
 
         {error ? (
-          <Surface compact>
-            <Text style={{ color: "#A94442" }}>{error}</Text>
+          <Surface compact routeTheme="workouts">
+            <Text style={{ color: theme.colors.danger }}>{error}</Text>
           </Surface>
         ) : null}
       </ScrollView>

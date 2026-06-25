@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { createApiClient } from "@platform/sdk";
 import type {
   ApiError,
@@ -11,48 +11,19 @@ import type {
 } from "@platform/types";
 import {
   ActionButton,
+  Badge,
+  ChoiceChip,
+  EmptyState,
   Screen,
   SectionTitle,
+  StatusBanner,
   Surface,
   TextField
 } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 const difficultyOptions: WorkoutDifficulty[] = ["beginner", "intermediate", "advanced"];
-
-function ChoiceChip({
-  label,
-  selected,
-  onPress
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 999,
-        backgroundColor: selected ? "#122036" : "#FFFFFF",
-        borderWidth: 1,
-        borderColor: selected ? "#122036" : "rgba(18, 32, 54, 0.12)"
-      }}
-    >
-      <Text
-        style={{
-          color: selected ? "#FFFFFF" : "#122036",
-          fontWeight: "700",
-          textTransform: "capitalize"
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
 
 function formatQuotaCopy(quota: UserAiQuotaStatus | null) {
   if (!quota) {
@@ -86,6 +57,7 @@ export default function WorkoutsScreen() {
   const [availableMinutes, setAvailableMinutes] = useState("20");
   const [preferredDifficulty, setPreferredDifficulty] = useState<WorkoutDifficulty>("beginner");
   const [focusTags, setFocusTags] = useState("");
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session) {
@@ -158,35 +130,33 @@ export default function WorkoutsScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="workouts">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ gap: 16, paddingBottom: 24 }}
       >
-        <Surface>
+        <Surface routeTheme="workouts">
           <SectionTitle
             eyebrow="Workouts"
             title="Published sessions"
             subtitle="Browse the live catalog, including workouts assigned by your coach."
           />
-          {error ? <Text style={{ color: "#A94442" }}>{error}</Text> : null}
+          {error ? <StatusBanner tone="danger">{error}</StatusBanner> : null}
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="workouts">
           <SectionTitle
             eyebrow="AI recommendations"
             title="Find the best match faster"
             subtitle="AI only ranks the workouts already published in your library. It never creates new programs here."
           />
-          <Text style={{ color: "#607084", marginBottom: 12 }}>{formatQuotaCopy(quota)}</Text>
+          <Text style={{ color: theme.colors.textMuted, marginBottom: 12 }}>{formatQuotaCopy(quota)}</Text>
           {workoutAvailability ? (
-            <Text style={{ color: workoutAvailability.status === "available" ? "#607084" : "#A94442" }}>
+            <StatusBanner tone={workoutAvailability.status === "available" ? "neutral" : "danger"}>
               {workoutAvailability.message}
-            </Text>
+            </StatusBanner>
           ) : null}
-          {recommendationError ? (
-            <Text style={{ color: "#A94442", marginTop: 10 }}>{recommendationError}</Text>
-          ) : null}
+          {recommendationError ? <StatusBanner tone="danger">{recommendationError}</StatusBanner> : null}
           <View style={{ gap: 12, marginTop: 14 }}>
             <TextField
               onChangeText={setGoal}
@@ -200,13 +170,14 @@ export default function WorkoutsScreen() {
               value={availableMinutes}
             />
             <View style={{ gap: 8 }}>
-              <Text style={{ color: "#607084", fontWeight: "700" }}>Preferred intensity</Text>
+              <Text style={{ color: theme.colors.textMuted, fontWeight: "700" }}>Preferred intensity</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {difficultyOptions.map((difficulty) => (
                   <ChoiceChip
                     key={difficulty}
                     label={difficulty}
                     onPress={() => setPreferredDifficulty(difficulty)}
+                    routeTheme="workouts"
                     selected={preferredDifficulty === difficulty}
                   />
                 ))}
@@ -242,16 +213,14 @@ export default function WorkoutsScreen() {
             <View style={{ gap: 12, marginTop: 16 }}>
               {recommendationResult.recommendations.length > 0 ? (
                 recommendationResult.recommendations.map((recommendation) => (
-                  <Surface compact key={recommendation.workoutId}>
+                  <Surface compact key={recommendation.workoutId} routeTheme="workouts">
                     <View style={{ gap: 8 }}>
-                      <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A" }}>
-                        AI match
-                      </Text>
-                      <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                      <Badge label="AI match" routeTheme="workouts" tone="accent" />
+                      <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                         {recommendation.workout.title}
                       </Text>
-                      <Text style={{ color: "#607084" }}>{recommendation.explanation}</Text>
-                      <Text style={{ color: "#607084" }}>
+                      <Text style={{ color: theme.colors.textMuted }}>{recommendation.explanation}</Text>
+                      <Text style={{ color: theme.colors.textMuted }}>
                         {recommendation.workout.durationMinutes} min •{" "}
                         {recommendation.workout.difficulty}
                       </Text>
@@ -270,40 +239,31 @@ export default function WorkoutsScreen() {
                   </Surface>
                 ))
               ) : (
-                <Surface compact>
-                  <Text style={{ color: "#607084" }}>
-                    No strong match came back from AI yet. Try a clearer goal or different duration.
-                  </Text>
-                </Surface>
+                <EmptyState
+                  title="No strong match yet"
+                  description="Try a clearer goal or a different duration and ask again."
+                />
               )}
             </View>
           ) : null}
         </Surface>
 
-        {loading ? <Text style={{ color: "#607084" }}>Loading workouts...</Text> : null}
+        {loading ? <Text style={{ color: theme.colors.textMuted }}>Loading workouts...</Text> : null}
 
         {workouts.map((workout) => (
-          <Surface key={workout.id} compact>
+          <Surface key={workout.id} compact routeTheme="workouts">
             <View style={{ gap: 8 }}>
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>{workout.title}</Text>
-              <Text style={{ color: "#607084" }}>{workout.description}</Text>
-              <Text style={{ color: "#607084" }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>{workout.title}</Text>
+              <Text style={{ color: theme.colors.textMuted }}>{workout.description}</Text>
+              <Text style={{ color: theme.colors.textMuted }}>
                 {workout.durationMinutes} min • {workout.difficulty}
               </Text>
               {workout.assignment ? (
-                <View
-                  style={{
-                    alignSelf: "flex-start",
-                    paddingHorizontal: 10,
-                    paddingVertical: 6,
-                    borderRadius: 999,
-                    backgroundColor: "rgba(135, 168, 164, 0.18)"
-                  }}
-                >
-                  <Text style={{ color: "#122036", fontWeight: "700" }}>
-                    Assigned by {workout.assignment.coachDisplayName}
-                  </Text>
-                </View>
+                <Badge
+                  label={`Assigned by ${workout.assignment.coachDisplayName}`}
+                  routeTheme="workouts"
+                  tone="accent"
+                />
               ) : null}
             </View>
             <View style={{ marginTop: 14 }}>
@@ -321,12 +281,10 @@ export default function WorkoutsScreen() {
         ))}
 
         {!loading && workouts.length === 0 ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>
-              No published workouts are available yet. Ask your admin or coach to publish the first
-              session.
-            </Text>
-          </Surface>
+          <EmptyState
+            title="No workouts published yet"
+            description="Ask your admin or coach to publish the first session."
+          />
         ) : null}
       </ScrollView>
     </Screen>

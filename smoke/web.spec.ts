@@ -19,7 +19,7 @@ test.describe("Web smoke", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
 
     await expect(page).toHaveURL(/\/account$/);
-    await expect(page.getByRole("heading", { name: "Orders, entitlements, and subscription state" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Orders, products, and subscription" })).toBeVisible();
   });
 
   test("checkout bridge handles missing params safely", async ({ page }) => {

@@ -3,8 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { ScrollView, View } from "react-native";
 import { createApiClient } from "@platform/sdk";
 import type { WorkoutListItem, WorkoutSessionSummary } from "@platform/types";
-import { AccentBanner, ContentCard } from "../../src/components/cards";
-import { ActionButton, MetricCard, Screen, SectionTitle, Surface } from "../../src/components/ui";
+import { ContentCard } from "../../src/components/cards";
+import {
+  ActionButton,
+  MetricCard,
+  Screen,
+  SectionTitle,
+  Surface,
+  ThemeModeToggle
+} from "../../src/components/ui";
 import { mobileMetadata } from "../../src/metadata";
 import { useSession } from "../../src/session";
 
@@ -37,20 +44,31 @@ export default function DashboardScreen() {
   const completedCount = history.filter((item) => item.status === "completed").length;
 
   return (
-    <Screen>
+    <Screen routeTheme="home">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
-        <AccentBanner title={mobileMetadata.headline} subtitle={mobileMetadata.subheadline} />
+        <Surface routeTheme="home">
+          <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <SectionTitle
+                eyebrow="Today"
+                title={mobileMetadata.headline}
+                subtitle={mobileMetadata.subheadline}
+              />
+            </View>
+            <ThemeModeToggle />
+          </View>
+        </Surface>
 
-        <Surface>
+        <Surface routeTheme="home">
           <SectionTitle
-            eyebrow="Today"
-            title="Your live training and reset dashboard"
-            subtitle="Published workouts, assigned sessions, recent completion history, and your reset tab all come from the current platform baseline."
+            eyebrow="Summary"
+            title="Your activity"
+            subtitle="A quick view of workouts, assignments, and completed sessions."
           />
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            <MetricCard label="Published workouts" value={String(workouts.length)} hint="Current catalog count" />
-            <MetricCard label="Assigned" value={String(assignedCount)} hint="Coach-assigned workouts" />
-            <MetricCard label="Completed" value={String(completedCount)} hint="Finished workout sessions" />
+            <MetricCard label="Workouts" value={String(workouts.length)} hint="Available" routeTheme="workouts" />
+            <MetricCard label="Assigned" value={String(assignedCount)} hint="From coach" routeTheme="reset" />
+            <MetricCard label="Done" value={String(completedCount)} hint="Completed" routeTheme="progress" />
           </View>
         </Surface>
 
@@ -67,11 +85,11 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <Surface>
+        <Surface routeTheme="workouts">
           <SectionTitle
-            eyebrow="Available now"
-            title="Pick your next session"
-            subtitle="Jump into a workout here, then use the reset tab for relaxation and music."
+            eyebrow="Next"
+            title="Choose a workout"
+            subtitle="Open a session when you are ready."
           />
           <View style={{ gap: 12 }}>
             {workouts.slice(0, 3).map((workout) => (
@@ -85,11 +103,11 @@ export default function DashboardScreen() {
           </View>
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="Reset"
-            title="Wellness is live"
-            subtitle="Daily quote, panchang, guided relaxation, and music now live inside the reset tab."
+            title="Take a reset"
+            subtitle="Use guided breathing, relaxation, and quiet music between training sessions."
           />
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>

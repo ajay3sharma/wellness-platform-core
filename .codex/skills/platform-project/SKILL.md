@@ -50,7 +50,7 @@ Use this skill for implementation work in this repo. Treat it as the stable proj
 - `packages/billing`: payment provider resolution
 - `packages/ai`: quota and AI policy helpers
 - `packages/sdk`: typed API client
-- `packages/ui`: shared theme helpers and later UI primitives
+- `packages/ui`: shared claymorphism theme helpers, route color helpers, light/dark surface profiles, and shared UI primitives
 
 ## Ownership Guidance
 
@@ -87,6 +87,9 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 - Phase 5: implemented and repo-validated in the current baseline
 - Phase 3 live billing acceptance is parked as a pending follow-up until explicitly resumed
 - Phase 4 live AI acceptance still requires a real `GEMINI_API_KEY` for end-to-end provider calls
+- Base44-inspired claymorphism UI reset is implemented in the current working tree across web, admin, and mobile
+- Current UI reset validation passed with `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm smoke:setup`, `corepack pnpm smoke`, and `corepack pnpm screenshots`
+- Screenshot evidence was regenerated from Postgres-backed smoke fixtures under `test-results/screenshots/`
 - Phase 5 baseline includes:
   - request tracing
   - readiness
@@ -218,6 +221,28 @@ Phase 1 acceptance has already been validated on the current baseline through th
   - disable the related UI gracefully
   - do not block non-AI product flows
 
+## UI And UX Rules
+
+- Keep the active design direction Base44-inspired claymorphism wellness: soft pastel route surfaces, rounded clay cards, slate/navy text, orange focus actions, gentle neumorphic shadows, and calm whitespace across `web`, `admin`, and `mobile`
+- Resolve colors, typography, spacing, radius, shadow, and motion from shared brand tokens rather than app-local constants
+- Prefer the current semantic token vocabulary:
+  - `canvas`, `canvasSoft`, `surface`, `surfaceRaised`
+  - `textStrong`, `textMuted`, `borderSoft`, `borderStrong`
+  - `primary`, `primaryStrong`, `accentSoft`
+  - `success`, `warning`, `danger`
+- Use route themes for `home`, `workouts`, `reset`, `store`, `progress`, `admin`, and `profile`; do not hardcode those route colors in feature pages
+- Use `Inter, system-ui, sans-serif`, relaxed line-height, and light display headings
+- Use `#FAFAFA` light canvas, white clay cards, slate text, pastel route backgrounds, and `#FF6A00` focus actions
+- Use deep slate dark canvas, charcoal cards, pastel route accents, off-white text, and subdued dark clay shadows
+- Keep cards rounded and softly raised with clay/neumorphic shadow treatment
+- Do not reintroduce Apple-neutral styling as the active baseline:
+  - no Apple-blue default actions
+  - no flat gray product shells
+  - no feature-local color systems
+  - no generic SaaS visual language
+- Admin should feel like the same product as consumer surfaces, with only modest density tightening where operational workflows need it
+- Avoid reintroducing scattered inline color, border, button, and card styling on flagship screens when the shared tokens or primitives already cover the need
+
 ## Standard Commands
 
 - Install: `corepack pnpm install`
@@ -229,8 +254,9 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - Lint: `corepack pnpm lint`
 - Typecheck: `corepack pnpm typecheck`
 - Build: `corepack pnpm build`
-- Smoke setup: `corepack pnpm smoke:setup`
-- Smoke: `corepack pnpm smoke`
+- Smoke setup: `corepack pnpm smoke:setup` after Postgres is reachable through `DATABASE_URL`
+- Smoke: `corepack pnpm smoke` after `smoke:setup` succeeds
+- Screenshots: `corepack pnpm screenshots` after seeded fixtures exist
 - Brand check: `node scripts/brand-check.mjs`
 - Repo check: `node scripts/repo-check.mjs`
 - Git flow: prefer direct work on `main` for accepted milestones; use `codex/<task-name>` only when work needs temporary isolation

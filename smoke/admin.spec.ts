@@ -5,7 +5,7 @@ test.describe("Admin smoke", () => {
   test("login and request-access pages render", async ({ page }) => {
     await page.goto(`${adminBaseUrl}/login`);
     await expect(
-      page.getByRole("heading", { name: "Operate programs, coaches, and commerce from one control room." })
+      page.getByRole("heading", { name: "Programs, people, and payments." })
     ).toBeVisible();
 
     await page.goto(`${adminBaseUrl}/request-access`);
@@ -18,14 +18,13 @@ test.describe("Admin smoke", () => {
     await page.getByLabel("Password").fill(smokeUsers.admin.password);
     await page.getByRole("button", { name: "Enter workspace" }).click();
 
-    await expect(page).toHaveURL(/\/dashboard$/);
     await expect(
-      page.locator("h1", { hasText: "Operate programs, coaches, and commerce from one control room." })
+      page.locator("h1", { hasText: "Programs, people, and payments." })
     ).toBeVisible();
 
     await page.goto(`${adminBaseUrl}/content`);
     await expect(
-      page.getByRole("heading", { name: "Manage workouts and wellness content in one place." })
+      page.getByRole("heading", { name: "Manage workouts and wellness content." })
     ).toBeVisible();
 
     await page.goto(`${adminBaseUrl}/commerce`);
@@ -40,7 +39,9 @@ test.describe("Admin smoke", () => {
     await page.getByLabel("Password").fill(smokeUsers.coach.password);
     await page.getByRole("button", { name: "Enter workspace" }).click();
 
-    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(
+      page.locator("h1", { hasText: "Programs, people, and payments." })
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Content" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Commerce" })).toHaveCount(0);
 

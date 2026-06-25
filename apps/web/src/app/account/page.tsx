@@ -3,7 +3,7 @@
 import { createApiClient } from "@platform/sdk";
 import type { ApiError, EntitlementSnapshot, OrderRecord, UserSubscription } from "@platform/types";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useWebSession } from "../../lib/session";
 import { webSurfaceCopy } from "../../lib/site";
 
@@ -50,7 +50,7 @@ export default function AccountPage() {
 
   if (status === "booting") {
     return (
-      <section className="panel section">
+<section className="panel section" data-route-theme="profile">
         <span className="eyebrow">Account</span>
         <p className="muted">Restoring your session...</p>
       </section>
@@ -59,20 +59,11 @@ export default function AccountPage() {
 
   if (!session) {
     return (
-      <section className="panel section">
+      <section className="panel section" data-route-theme="profile">
         <span className="eyebrow">Account</span>
-        <h1
-          style={{
-            fontFamily: 'Georgia, "Times New Roman", serif',
-            fontSize: "clamp(2.4rem, 5vw, 4rem)",
-            margin: "14px 0 10px"
-          }}
-        >
-          Sign in to view orders and plans
-        </h1>
-        <p className="muted" style={{ lineHeight: 1.75, maxWidth: "60ch" }}>
-          The account route now reflects live order history, entitlements, and subscription status
-          for {webSurfaceCopy.brandName}.
+        <h1 className="section-title">Sign in to view orders and plans</h1>
+        <p className="lead-copy" style={{ maxWidth: "60ch" }}>
+          View order history, products, and subscription status for {webSurfaceCopy.brandName}.
         </p>
         <div className="hero-actions" style={{ marginTop: 22 }}>
           <Link className="cta-pill" href="/login">
@@ -87,36 +78,14 @@ export default function AccountPage() {
   }
 
   return (
-    <section className="panel section">
+    <section className="panel section" data-route-theme="profile">
       <span className="eyebrow">Account</span>
-      <h1
-        style={{
-          fontFamily: 'Georgia, "Times New Roman", serif',
-          fontSize: "clamp(2.4rem, 5vw, 4rem)",
-          margin: "14px 0 10px"
-        }}
-      >
-        Orders, entitlements, and subscription state
-      </h1>
-      <p className="muted" style={{ lineHeight: 1.75, maxWidth: "62ch" }}>
-        This account is connected to the shared auth layer, so commerce state stays aligned with the
-        same user identity used across the rest of the platform.
+      <h1 className="section-title">Orders, products, and subscription</h1>
+      <p className="lead-copy" style={{ maxWidth: "62ch" }}>
+        Everything purchased or subscribed to with this account appears here.
       </p>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 18,
-            padding: 14,
-            borderRadius: 18,
-            border: "1px solid rgba(169, 68, 66, 0.18)",
-            background: "rgba(169, 68, 66, 0.08)",
-            color: "#8a2c2b"
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className="alert-banner">{error}</div> : null}
 
       <div className="feature-grid" style={{ marginTop: 24 }}>
         <article className="feature-card">
@@ -158,8 +127,8 @@ export default function AccountPage() {
         </div>
 
         <div className="surface-card">
-          <strong>Entitlements</strong>
-          {loading ? <p className="muted">Loading entitlements...</p> : null}
+          <strong>Products</strong>
+          {loading ? <p className="muted">Loading products...</p> : null}
           {!loading && entitlements ? (
             <div className="stack" style={{ marginTop: 14 }}>
               <p style={{ margin: 0 }}>User plan: {entitlements.userPlan}</p>
@@ -180,7 +149,9 @@ export default function AccountPage() {
       </div>
 
       <div style={{ marginTop: 28 }}>
-        <h2 style={headingStyle}>Order History</h2>
+        <h2 className="eyebrow" style={{ marginBottom: 14 }}>
+          Order History
+        </h2>
         <div className="surface-grid">
           {orders.map((order) => (
             <article className="surface-card" key={order.id}>
@@ -216,10 +187,3 @@ function formatMoney(currency: string, amountMinor: number) {
     maximumFractionDigits: 2
   }).format(amountMinor / 100);
 }
-
-const headingStyle = {
-  margin: "0 0 14px",
-  fontSize: "1.15rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.12em"
-} satisfies CSSProperties;

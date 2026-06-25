@@ -26,6 +26,9 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const dividerStyle: CSSProperties = {
+    borderBottom: "1px solid var(--theme-border-soft)"
+  };
   const api = useMemo(
     () =>
       createApiClient({
@@ -151,7 +154,7 @@ export default function StorePage() {
   }
 
   return (
-    <section className="panel section">
+    <section className="panel section" data-route-theme="store">
       <span className="eyebrow">Store</span>
       <div
         style={{
@@ -163,18 +166,10 @@ export default function StorePage() {
         }}
       >
         <div>
-          <h1
-            style={{
-              fontFamily: 'Georgia, "Times New Roman", serif',
-              fontSize: "clamp(2.4rem, 5vw, 4rem)",
-              margin: "14px 0 10px"
-            }}
-          >
-            Digital products and memberships
-          </h1>
-          <p className="muted" style={{ lineHeight: 1.75, maxWidth: "62ch" }}>
-            Browse the live catalog for {webSurfaceCopy.brandName}, add one-time products to your
-            cart, or start a subscription checkout for the current market.
+          <h1 className="section-title">Digital products and memberships</h1>
+          <p className="lead-copy" style={{ maxWidth: "62ch" }}>
+            Browse the live catalog, add one-time products to your cart, or start a membership
+            checkout for the selected market.
           </p>
         </div>
 
@@ -195,20 +190,7 @@ export default function StorePage() {
         </div>
       </div>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 18,
-            padding: 14,
-            borderRadius: 18,
-            border: "1px solid rgba(169, 68, 66, 0.18)",
-            background: "rgba(169, 68, 66, 0.08)",
-            color: "#8a2c2b"
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className="alert-banner">{error}</div> : null}
 
       <div className="info-band" style={{ marginTop: 24 }}>
         <div className="metric-card">
@@ -326,7 +308,7 @@ export default function StorePage() {
                     gap: 16,
                     alignItems: "center",
                     padding: "14px 0",
-                    borderBottom: "1px solid rgba(28, 33, 38, 0.08)"
+                    ...dividerStyle
                   }}
                 >
                   <div>
@@ -404,6 +386,5 @@ function formatMoney(currency: string, amountMinor: number) {
 const headingStyle = {
   margin: "0 0 14px",
   fontSize: "1.15rem",
-  textTransform: "uppercase",
-  letterSpacing: "0.12em"
+  fontWeight: 700
 } satisfies CSSProperties;

@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { createApiClient } from "@platform/sdk";
 import type {
   ApiError,
@@ -13,41 +13,20 @@ import type {
 } from "@platform/types";
 import {
   ActionButton,
+  Badge,
+  ChoiceChip,
+  EmptyState,
   Screen,
   SectionTitle,
+  StatusBanner,
   Surface,
   TextField
 } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 import { formatDurationLabel, formatMinutesLabel, resolveDeviceTimeZone } from "../../src/wellness";
 
 const resetNeeds: Array<ResetRecommendationNeed | ""> = ["", "calm", "focus", "sleep", "recovery"];
-
-function ChoiceChip({
-  label,
-  selected,
-  onPress
-}: {
-  label: string;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={{
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 999,
-        backgroundColor: selected ? "#122036" : "#FFFFFF",
-        borderWidth: 1,
-        borderColor: selected ? "#122036" : "rgba(18, 32, 54, 0.12)"
-      }}
-    >
-      <Text style={{ color: selected ? "#FFFFFF" : "#122036", fontWeight: "700" }}>{label}</Text>
-    </Pressable>
-  );
-}
 
 function formatQuotaCopy(quota: UserAiQuotaStatus | null) {
   if (!quota) {
@@ -82,6 +61,7 @@ export default function ResetScreen() {
   const [intent, setIntent] = useState("");
   const [availableMinutes, setAvailableMinutes] = useState("10");
   const [need, setNeed] = useState<ResetRecommendationNeed | "">("");
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session) {
@@ -162,39 +142,44 @@ export default function ResetScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="reset">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ gap: 16, paddingBottom: 24 }}
       >
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="Reset"
             title="Wellness rituals"
-            subtitle="Daily quote, panchang, guided relaxation, and music now come from the live API."
+            subtitle="Daily guidance, relaxation, and music for recovery."
           />
           {snapshot ? (
-            <Text style={{ color: "#607084" }}>
+            <Text style={{ color: theme.colors.textMuted }}>
               Device day {snapshot.resolvedDate} • {snapshot.timeZone}
             </Text>
           ) : null}
-          {error ? <Text style={{ color: "#A94442", marginTop: 8 }}>{error}</Text> : null}
+          {error ? <StatusBanner routeTheme="reset" tone="danger">{error}</StatusBanner> : null}
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="AI recommendations"
             title="Get a faster reset suggestion"
             subtitle="AI only ranks the published relaxation and music already available in your app."
           />
-          <Text style={{ color: "#607084", marginBottom: 12 }}>{formatQuotaCopy(quota)}</Text>
+          <Text style={{ color: theme.colors.textMuted, marginBottom: 12 }}>{formatQuotaCopy(quota)}</Text>
           {resetAvailability ? (
-            <Text style={{ color: resetAvailability.status === "available" ? "#607084" : "#A94442" }}>
+            <StatusBanner
+              routeTheme="reset"
+              tone={resetAvailability.status === "available" ? "neutral" : "danger"}
+            >
               {resetAvailability.message}
-            </Text>
+            </StatusBanner>
           ) : null}
           {recommendationError ? (
-            <Text style={{ color: "#A94442", marginTop: 10 }}>{recommendationError}</Text>
+            <StatusBanner routeTheme="reset" tone="danger">
+              {recommendationError}
+            </StatusBanner>
           ) : null}
           <View style={{ gap: 12, marginTop: 14 }}>
             <TextField
@@ -209,13 +194,14 @@ export default function ResetScreen() {
               value={availableMinutes}
             />
             <View style={{ gap: 8 }}>
-              <Text style={{ color: "#607084", fontWeight: "700" }}>Need</Text>
+              <Text style={{ color: theme.colors.textMuted, fontWeight: "700" }}>Need</Text>
               <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
                 {resetNeeds.map((option) => (
                   <ChoiceChip
                     key={option || "any"}
                     label={option || "Any"}
                     onPress={() => setNeed(option)}
+                    routeTheme="reset"
                     selected={need === option}
                   />
                 ))}
@@ -244,18 +230,16 @@ export default function ResetScreen() {
           {recommendationResult ? (
             <View style={{ gap: 12, marginTop: 16 }}>
               {recommendationResult.relaxation ? (
-                <Surface compact>
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A" }}>
-                    AI relaxation pick
-                  </Text>
+                <Surface compact routeTheme="reset">
+                  <Badge label="AI relaxation pick" routeTheme="reset" tone="accent" />
                   <View style={{ gap: 8, marginTop: 8 }}>
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                       {recommendationResult.relaxation.technique.title}
                     </Text>
-                    <Text style={{ color: "#607084" }}>
+                    <Text style={{ color: theme.colors.textMuted }}>
                       {recommendationResult.relaxation.explanation}
                     </Text>
-                    <Text style={{ color: "#607084" }}>
+                    <Text style={{ color: theme.colors.textMuted }}>
                       {formatMinutesLabel(
                         recommendationResult.relaxation.technique.estimatedDurationMinutes
                       )}
@@ -278,16 +262,14 @@ export default function ResetScreen() {
               ) : null}
 
               {recommendationResult.music ? (
-                <Surface compact>
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A" }}>
-                    AI music pick
-                  </Text>
+                <Surface compact routeTheme="reset">
+                  <Badge label="AI music pick" routeTheme="reset" tone="accent" />
                   <View style={{ gap: 8, marginTop: 8 }}>
-                    <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                    <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                       {recommendationResult.music.track.title}
                     </Text>
-                    <Text style={{ color: "#607084" }}>{recommendationResult.music.explanation}</Text>
-                    <Text style={{ color: "#607084" }}>
+                    <Text style={{ color: theme.colors.textMuted }}>{recommendationResult.music.explanation}</Text>
+                    <Text style={{ color: theme.colors.textMuted }}>
                       {recommendationResult.music.track.artistName} •{" "}
                       {formatDurationLabel(recommendationResult.music.track.durationSeconds)}
                     </Text>
@@ -307,64 +289,58 @@ export default function ResetScreen() {
               ) : null}
 
               {!recommendationResult.relaxation && !recommendationResult.music ? (
-                <Surface compact>
-                  <Text style={{ color: "#607084" }}>
-                    AI could not find a strong reset match yet. Try a clearer intent or different
-                    duration.
-                  </Text>
-                </Surface>
+                <EmptyState
+                  title="No strong reset match yet"
+                  description="Try a clearer intent or a different duration and ask again."
+                />
               ) : null}
             </View>
           ) : null}
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="Daily feed"
             title="Quote and panchang"
             subtitle="These entries follow the device timezone passed from the mobile app."
           />
           <View style={{ gap: 12 }}>
-            <Surface compact>
-              <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A", textTransform: "uppercase" }}>
-                Daily quote
-              </Text>
+            <Surface compact routeTheme="reset">
+              <Badge label="Daily quote" routeTheme="reset" tone="accent" />
               {snapshot?.quote ? (
                 <View style={{ gap: 8, marginTop: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                     “{snapshot.quote.quoteText}”
                   </Text>
-                  <Text style={{ color: "#607084" }}>{snapshot.quote.author ?? "Unknown author"}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>{snapshot.quote.author ?? "Unknown author"}</Text>
                 </View>
               ) : (
-                <Text style={{ color: "#607084", marginTop: 8 }}>
+                <Text style={{ color: theme.colors.textMuted, marginTop: 8 }}>
                   No quote has been published for today yet.
                 </Text>
               )}
             </Surface>
 
-            <Surface compact>
-              <Text style={{ fontSize: 12, fontWeight: "700", color: "#8A5B3A", textTransform: "uppercase" }}>
-                Panchang
-              </Text>
+            <Surface compact routeTheme="reset">
+              <Badge label="Panchang" routeTheme="reset" tone="accent" />
               {snapshot?.panchang ? (
                 <View style={{ gap: 8, marginTop: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                     {snapshot.panchang.headline}
                   </Text>
-                  <Text style={{ color: "#607084" }}>
+                  <Text style={{ color: theme.colors.textMuted }}>
                     {snapshot.panchang.tithi} • {snapshot.panchang.nakshatra}
                   </Text>
-                  <Text style={{ color: "#607084" }}>
+                  <Text style={{ color: theme.colors.textMuted }}>
                     Sunrise {snapshot.panchang.sunriseTime} • Sunset {snapshot.panchang.sunsetTime}
                   </Text>
-                  <Text style={{ color: "#607084" }}>{snapshot.panchang.focusText}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>{snapshot.panchang.focusText}</Text>
                   {snapshot.panchang.notes ? (
-                    <Text style={{ color: "#607084" }}>{snapshot.panchang.notes}</Text>
+                    <Text style={{ color: theme.colors.textMuted }}>{snapshot.panchang.notes}</Text>
                   ) : null}
                 </View>
               ) : (
-                <Text style={{ color: "#607084", marginTop: 8 }}>
+                <Text style={{ color: theme.colors.textMuted, marginTop: 8 }}>
                   No panchang entry has been published for today yet.
                 </Text>
               )}
@@ -372,7 +348,7 @@ export default function ResetScreen() {
           </View>
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="Relaxation"
             title="Guided reset techniques"
@@ -380,13 +356,13 @@ export default function ResetScreen() {
           />
           <View style={{ gap: 12 }}>
             {relaxation.map((technique) => (
-              <Surface compact key={technique.id}>
+              <Surface compact key={technique.id} routeTheme="reset">
                 <View style={{ gap: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>
                     {technique.title}
                   </Text>
-                  <Text style={{ color: "#607084" }}>{technique.description}</Text>
-                  <Text style={{ color: "#607084" }}>
+                  <Text style={{ color: theme.colors.textMuted }}>{technique.description}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>
                     {formatMinutesLabel(technique.estimatedDurationMinutes)}
                     {technique.category ? ` • ${technique.category}` : ""}
                   </Text>
@@ -405,14 +381,15 @@ export default function ResetScreen() {
               </Surface>
             ))}
             {!loading && relaxation.length === 0 ? (
-              <Surface compact>
-                <Text style={{ color: "#607084" }}>No relaxation techniques are published yet.</Text>
-              </Surface>
+              <EmptyState
+                title="No relaxation techniques yet"
+                description="Nothing is published for this section right now."
+              />
             ) : null}
           </View>
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="reset">
           <SectionTitle
             eyebrow="Music"
             title="Ambient tracks"
@@ -420,11 +397,11 @@ export default function ResetScreen() {
           />
           <View style={{ gap: 12 }}>
             {music.map((track) => (
-              <Surface key={track.id} compact>
+              <Surface key={track.id} compact routeTheme="reset">
                 <View style={{ gap: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>{track.title}</Text>
-                  <Text style={{ color: "#607084" }}>{track.description}</Text>
-                  <Text style={{ color: "#607084" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>{track.title}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>{track.description}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>
                     {track.artistName} • {formatDurationLabel(track.durationSeconds)}
                   </Text>
                 </View>
@@ -442,17 +419,16 @@ export default function ResetScreen() {
               </Surface>
             ))}
             {!loading && music.length === 0 ? (
-              <Surface compact>
-                <Text style={{ color: "#607084" }}>No music tracks are published yet.</Text>
-              </Surface>
+              <EmptyState
+                title="No music tracks yet"
+                description="Nothing is published for this section right now."
+              />
             ) : null}
           </View>
         </Surface>
 
         {loading ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>Loading wellness content...</Text>
-          </Surface>
+          <StatusBanner routeTheme="reset">Loading wellness content...</StatusBanner>
         ) : null}
       </ScrollView>
     </Screen>

@@ -11,8 +11,16 @@ import type {
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import { Linking, ScrollView, Text, View } from "react-native";
-import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
+import {
+  ActionButton,
+  EmptyState,
+  Screen,
+  SectionTitle,
+  StatusBanner,
+  Surface
+} from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 export default function StoreScreen() {
   const { session } = useSession();
@@ -25,6 +33,7 @@ export default function StoreScreen() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { theme } = useThemeMode();
   const api = useMemo(
     () =>
       createApiClient({
@@ -159,8 +168,8 @@ export default function StoreScreen() {
 
   if (!session) {
     return (
-      <Screen>
-        <Surface>
+      <Screen routeTheme="store">
+        <Surface routeTheme="store">
           <SectionTitle
             eyebrow="Store"
             title="Sign in to access commerce"
@@ -172,13 +181,13 @@ export default function StoreScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="store">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
-        <Surface>
+        <Surface routeTheme="store">
           <SectionTitle
             eyebrow="Store"
             title="Products and memberships"
-            subtitle="Phase 3 connects this tab to the live commerce APIs and provider-backed checkout launch flow."
+            subtitle="Browse digital products, compare plans, and start checkout."
           />
           <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap", marginTop: 8 }}>
             {(["india", "global"] as const).map((option) => (
@@ -191,18 +200,18 @@ export default function StoreScreen() {
             ))}
           </View>
           {params.checkoutStatus ? (
-            <Text style={{ color: "#607084", marginTop: 14 }}>
+            <Text style={{ color: theme.colors.textMuted, marginTop: 14 }}>
               Checkout return: {String(params.checkoutStatus)}
             </Text>
           ) : null}
-          {error ? <Text style={{ color: "#A94442", marginTop: 14 }}>{error}</Text> : null}
+          {error ? <StatusBanner routeTheme="store" tone="danger">{error}</StatusBanner> : null}
         </Surface>
 
-        {loading ? <Text style={{ color: "#607084" }}>Loading store...</Text> : null}
+        {loading ? <StatusBanner routeTheme="store">Loading store...</StatusBanner> : null}
 
-        <Surface compact>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>Subscription</Text>
-          <Text style={{ color: "#607084", marginTop: 8 }}>
+        <Surface compact routeTheme="store">
+          <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>Subscription</Text>
+          <Text style={{ color: theme.colors.textMuted, marginTop: 8 }}>
             {subscription?.status === "active"
               ? `${subscription.planName} • ${formatMoney(subscription.currency, subscription.amountMinor)} / ${subscription.billingInterval}`
               : "No active subscription yet."}
@@ -213,11 +222,11 @@ export default function StoreScreen() {
           const price = product.activePrices.find((entry) => entry.market === market);
 
           return (
-            <Surface compact key={product.id}>
+            <Surface compact key={product.id} routeTheme="store">
               <View style={{ gap: 8 }}>
-                <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>{product.title}</Text>
-                <Text style={{ color: "#607084" }}>{product.description}</Text>
-                <Text style={{ color: "#122036", fontWeight: "700" }}>
+                <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>{product.title}</Text>
+                <Text style={{ color: theme.colors.textMuted }}>{product.description}</Text>
+                <Text style={{ color: theme.colors.textStrong, fontWeight: "700" }}>
                   {price ? formatMoney(price.currency, price.amountMinor) : "Unavailable"}
                 </Text>
               </View>
@@ -232,7 +241,14 @@ export default function StoreScreen() {
           );
         })}
 
-        <Surface>
+        {!loading && products.length === 0 ? (
+          <EmptyState
+            title="No products yet"
+            description="Published digital products will appear here for the selected market."
+          />
+        ) : null}
+
+        <Surface routeTheme="store">
           <SectionTitle
             eyebrow="Plans"
             title="Memberships"
@@ -246,10 +262,10 @@ export default function StoreScreen() {
 
               return (
                 <View key={plan.id} style={{ gap: 8 }}>
-                  <Text style={{ fontSize: 18, fontWeight: "700", color: "#122036" }}>{plan.name}</Text>
-                  <Text style={{ color: "#607084" }}>{plan.description}</Text>
-                  <Text style={{ color: "#607084" }}>{plan.features.join(" • ")}</Text>
-                  <Text style={{ color: "#122036", fontWeight: "700" }}>
+                  <Text style={{ fontSize: 18, fontWeight: "700", color: theme.colors.textStrong }}>{plan.name}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>{plan.description}</Text>
+                  <Text style={{ color: theme.colors.textMuted }}>{plan.features.join(" • ")}</Text>
+                  <Text style={{ color: theme.colors.textStrong, fontWeight: "700" }}>
                     {price
                       ? `${formatMoney(price.currency, price.amountMinor)} / ${plan.billingInterval}`
                       : "Unavailable"}
@@ -266,7 +282,7 @@ export default function StoreScreen() {
           </View>
         </Surface>
 
-        <Surface>
+        <Surface routeTheme="store">
           <SectionTitle
             eyebrow="Cart"
             title="Current cart"
@@ -276,10 +292,10 @@ export default function StoreScreen() {
             <View style={{ gap: 14 }}>
               {cart.items.map((item) => (
                 <View key={item.id} style={{ gap: 8 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: "#122036" }}>
+                  <Text style={{ fontSize: 16, fontWeight: "700", color: theme.colors.textStrong }}>
                     {item.productTitle}
                   </Text>
-                  <Text style={{ color: "#607084" }}>
+                  <Text style={{ color: theme.colors.textMuted }}>
                     {formatMoney(item.currency, item.totalAmountMinor)}
                   </Text>
                   <View style={{ flexDirection: "row", gap: 10, flexWrap: "wrap" }}>
@@ -309,7 +325,7 @@ export default function StoreScreen() {
               ))}
 
               <View style={{ gap: 10 }}>
-                <Text style={{ color: "#122036", fontWeight: "700" }}>
+                <Text style={{ color: theme.colors.textStrong, fontWeight: "700" }}>
                   Total: {formatMoney(cart.currency, cart.subtotalAmountMinor)}
                 </Text>
                 <ActionButton
@@ -320,7 +336,10 @@ export default function StoreScreen() {
               </View>
             </View>
           ) : (
-            <Text style={{ color: "#607084" }}>Your cart is empty for the selected market.</Text>
+            <EmptyState
+              title="Your cart is empty"
+              description="Add a product above to start checkout for this market."
+            />
           )}
         </Surface>
       </ScrollView>

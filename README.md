@@ -12,7 +12,8 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 - Phase 3 commerce and subscriptions are implemented in code across `apps/api`, `apps/admin`, `apps/web`, and `apps/mobile`, and live provider validation is parked as a pending follow-up
 - Phase 4 AI recommendations, admin drafts, and quota enforcement are implemented and repo-validated across `apps/api`, `apps/admin`, and `apps/mobile`
 - Phase 5 hardening, release readiness, readiness checks, trace IDs, structured logs, and smoke automation are now repo-validated across `apps/api`, `apps/web`, and `apps/admin`, with mobile still validated through the manual checklist
-- repo-level `lint`, `typecheck`, `build`, `smoke:setup`, and `smoke` are green on the current Phase 5 baseline
+- Base44-inspired claymorphism UI reset is implemented across `apps/web`, `apps/admin`, and `apps/mobile`
+- repo-level validation for the clay UI reset has passed: `typecheck`, `lint`, `build`, `smoke:setup`, `smoke`, and `screenshots`
 - `packages/*` hold shared brand, config, types, billing, AI, SDK, and UI helpers
 - `.codex/skills/platform-project` is the repo-owned project memory skill for future Codex sessions
 
@@ -33,7 +34,7 @@ The technical workspace stays neutral, while the first brand pack is `MoveYOU` w
 - `packages/billing`: market-aware billing provider resolution
 - `packages/ai`: free-tier-only AI quota policy helpers
 - `packages/sdk`: typed API client and endpoint contracts
-- `packages/ui`: shared UI token helpers for the clay-inspired design system
+- `packages/ui`: shared claymorphism theme tokens, route color helpers, light/dark mode helpers, surface profiles, and cross-surface UI helpers
 - `.codex/skills/platform-project`: repo-owned project memory skill for Codex sessions
 
 ## Execution Plan
@@ -81,6 +82,7 @@ Start one surface at a time:
 - `corepack pnpm dev:admin`
 - `corepack pnpm dev:api`
 - `corepack pnpm dev:mobile`
+- `corepack pnpm dev:mobile:web`
 
 These commands load the root `.env` automatically so the local API URL and shared runtime settings resolve consistently across admin, web, mobile, and API development.
 
@@ -107,9 +109,12 @@ Invoke-RestMethod `
 - `corepack pnpm lint`
 - `corepack pnpm typecheck`
 - `corepack pnpm build`
-- `corepack pnpm smoke:setup`
-- `corepack pnpm smoke`
+- `corepack pnpm smoke:setup` after Postgres is reachable through `DATABASE_URL`
+- `corepack pnpm smoke` after `smoke:setup` succeeds
+- `corepack pnpm screenshots` after `smoke:setup` succeeds
 - `corepack pnpm format`
+
+Screenshot artifacts are written to `test-results/screenshots/` with an `index.json` manifest after each successful screenshot run.
 
 Smoke fixture accounts after `corepack pnpm smoke:setup`:
 
@@ -141,6 +146,7 @@ Smoke fixture accounts after `corepack pnpm smoke:setup`:
 - Phase 3: implemented in code and repo-validated; live provider acceptance is parked as a pending follow-up
 - Phase 4: implemented and repo-validated; live Gemini acceptance pending `GEMINI_API_KEY`
 - Phase 5: implemented and repo-validated for request tracing, readiness, logs, smoke coverage, CI smoke setup, and release checklists
+- UI reset: Base44-inspired claymorphism visual baseline implemented and screenshot-validated under `test-results/screenshots/`
 
 ## Git Workflow
 
@@ -150,3 +156,15 @@ Smoke fixture accounts after `corepack pnpm smoke:setup`:
 - Keep brand-facing strings inside `packages/brand`
 
 More detail lives in [plan.md](./plan.md) and [docs/architecture.md](./docs/architecture.md).
+
+## UI System
+
+- The active visual standard is Base44-inspired claymorphism wellness: soft pastel route surfaces, rounded clay cards, slate/navy text, orange focus actions, and gentle neumorphic shadows across `web`, `admin`, and `mobile`
+- Brand theme resolves through mode-aware semantic tokens plus route themes for `home`, `workouts`, `reset`, `store`, `progress`, `admin`, and `profile`
+- Typography is simple `Inter, system-ui, sans-serif` with relaxed line-height and light display headings
+- `packages/ui` owns the resolved surface theme snapshot and density profile for `web`, `admin`, `mobile`, and `api`
+- Web and admin consume shared CSS variable output from the brand token system instead of page-level hardcoded colors
+- Mobile consumes the same token foundation through shared React Native primitives and screen-level composition helpers
+- Light mode uses `#FAFAFA`, white clay cards, slate text, pastel route colors, and orange focus actions
+- Dark mode uses deep slate canvas, lifted charcoal cards, pastel route accents, readable off-white text, and subdued clay shadows
+- Do not reintroduce Apple-neutral styling as the active baseline; route colors and clay shadows should remain owned by shared brand/UI tokens

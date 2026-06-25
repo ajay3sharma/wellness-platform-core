@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { ThemeModeToggle } from "./theme-mode-toggle";
 import { webAppMetadata, webNavigation, webSurfaceCopy } from "../lib/site";
 import { useWebSession } from "../lib/session";
 
@@ -23,7 +24,7 @@ export function SiteShell({ children }: SiteShellProps) {
           </span>
           <span>
             <strong>{webSurfaceCopy.brandName}</strong>
-            <small>{webAppMetadata.subheadline}</small>
+            <small>{webAppMetadata.headline}</small>
           </span>
         </Link>
 
@@ -36,8 +37,9 @@ export function SiteShell({ children }: SiteShellProps) {
         </nav>
 
         {status === "signed-in" && session ? (
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-            <span className="muted" style={{ fontSize: "0.95rem" }}>
+          <div className="kicker-row">
+            <ThemeModeToggle />
+            <span className="muted">
               {session.user.displayName}
             </span>
             <button
@@ -51,19 +53,19 @@ export function SiteShell({ children }: SiteShellProps) {
             </button>
           </div>
         ) : (
-          <Link className="cta-pill" href="/login">
-            Sign in
-          </Link>
+          <div className="kicker-row">
+            <ThemeModeToggle />
+            <Link className="cta-pill" href="/login">
+              Sign in
+            </Link>
+          </div>
         )}
       </header>
 
       <main className="main-frame">{children}</main>
 
       <footer className="footer">
-        <p>
-          Built for a white-label platform. Public surface for {webSurfaceCopy.brandName} at{" "}
-          {webSurfaceCopy.publicUrl}.
-        </p>
+        <p>{webSurfaceCopy.brandName} uses shared brand, billing, and content contracts.</p>
       </footer>
     </div>
   );

@@ -5,6 +5,7 @@ import { createApiClient } from "@platform/sdk";
 import type { ApiError, RelaxationTechniqueDetail } from "@platform/types";
 import { ActionButton, Screen, SectionTitle, Surface } from "../../src/components/ui";
 import { useSession } from "../../src/session";
+import { useThemeMode } from "../../src/theme/theme-context";
 import { formatClock, formatDurationLabel, formatMinutesLabel } from "../../src/wellness";
 
 export default function RelaxationDetailScreen() {
@@ -25,6 +26,7 @@ export default function RelaxationDetailScreen() {
   const [hasStarted, setHasStarted] = useState(false);
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const { theme } = useThemeMode();
 
   useEffect(() => {
     if (!session || !techniqueId) {
@@ -119,32 +121,32 @@ export default function RelaxationDetailScreen() {
   }
 
   return (
-    <Screen>
+    <Screen routeTheme="reset">
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16, paddingBottom: 24 }}>
         <ActionButton label="Back to reset" onPress={() => router.back()} variant="secondary" />
 
         {loading ? (
-          <Surface compact>
-            <Text style={{ color: "#607084" }}>Loading technique...</Text>
+          <Surface compact routeTheme="reset">
+            <Text style={{ color: theme.colors.textMuted }}>Loading technique...</Text>
           </Surface>
         ) : null}
 
         {technique ? (
           <>
-            <Surface>
+            <Surface routeTheme="reset">
               <SectionTitle
                 eyebrow="Relaxation"
                 title={technique.title}
                 subtitle={`${formatMinutesLabel(technique.estimatedDurationMinutes)} • ${technique.steps.length} guided steps`}
               />
-              <Text style={{ color: "#607084", lineHeight: 20 }}>{technique.description}</Text>
+              <Text style={{ color: theme.colors.textMuted, lineHeight: 20 }}>{technique.description}</Text>
               {technique.category ? (
-                <Text style={{ color: "#607084", marginTop: 10 }}>{technique.category}</Text>
+                <Text style={{ color: theme.colors.textMuted, marginTop: 10 }}>{technique.category}</Text>
               ) : null}
             </Surface>
 
             {currentStep ? (
-              <Surface>
+              <Surface routeTheme="reset">
                 <SectionTitle
                   eyebrow={completed ? "Complete" : "Current step"}
                   title={completed ? "Session finished" : `${currentStep.sequence}. ${currentStep.title}`}
@@ -155,10 +157,10 @@ export default function RelaxationDetailScreen() {
                   }
                 />
                 {!completed ? (
-                  <Text style={{ color: "#607084", lineHeight: 20 }}>{currentStep.instruction}</Text>
+                  <Text style={{ color: theme.colors.textMuted, lineHeight: 20 }}>{currentStep.instruction}</Text>
                 ) : (
-                  <Text style={{ color: "#607084", lineHeight: 20 }}>
-                    This reset was completed locally on your device. Phase 2 keeps relaxation playback lightweight and does not save history yet.
+                  <Text style={{ color: theme.colors.textMuted, lineHeight: 20 }}>
+                    This reset was completed locally on your device.
                   </Text>
                 )}
               </Surface>
@@ -210,7 +212,7 @@ export default function RelaxationDetailScreen() {
               )}
             </View>
 
-            <Surface compact>
+            <Surface compact routeTheme="reset">
               <SectionTitle
                 eyebrow="Step map"
                 title="Guided sequence"
@@ -225,15 +227,15 @@ export default function RelaxationDetailScreen() {
                       padding: 14,
                       backgroundColor:
                         index === currentStepIndex
-                          ? "rgba(135, 168, 164, 0.18)"
-                          : "rgba(255, 255, 255, 0.72)"
+                          ? theme.colors.accentSoft
+                          : theme.colors.surface
                     }}
                   >
-                    <Text style={{ fontSize: 16, fontWeight: "700", color: "#122036" }}>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: theme.colors.textStrong }}>
                       {step.sequence}. {step.title}
                     </Text>
-                    <Text style={{ color: "#607084", marginTop: 4 }}>{step.instruction}</Text>
-                    <Text style={{ color: "#607084", marginTop: 4 }}>
+                    <Text style={{ color: theme.colors.textMuted, marginTop: 4 }}>{step.instruction}</Text>
+                    <Text style={{ color: theme.colors.textMuted, marginTop: 4 }}>
                       {formatDurationLabel(step.durationSeconds)}
                     </Text>
                   </View>
@@ -244,8 +246,8 @@ export default function RelaxationDetailScreen() {
         ) : null}
 
         {error ? (
-          <Surface compact>
-            <Text style={{ color: "#A94442" }}>{error}</Text>
+          <Surface compact routeTheme="reset">
+            <Text style={{ color: theme.colors.danger }}>{error}</Text>
           </Surface>
         ) : null}
       </ScrollView>

@@ -8,7 +8,7 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
+    "web": "node ./scripts/start-web.mjs",
     "build": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint app src app.config.ts babel.config.cjs --max-warnings=0",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -19,12 +19,14 @@
     "@platform/sdk": "workspace:*",
     "@platform/types": "workspace:*",
     "@platform/ui": "workspace:*",
+    "@react-native-async-storage/async-storage": "^3.0.2",
     "expo": "~55.0.0",
     "expo-audio": "~1.0.13",
     "expo-router": "~55.0.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "react-native": "0.83.0"
+    "react-native": "0.83.0",
+    "react-native-web": "~0.21.2"
   },
   "devDependencies": {
     "@types/react": "19.2.0",

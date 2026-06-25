@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import type { ApiError } from "@platform/types";
-import type { CSSProperties } from "react";
 import { useWebSession } from "../../lib/session";
 import { webSurfaceCopy } from "../../lib/site";
 
@@ -60,36 +59,14 @@ export default function LoginPage() {
   }
 
   return (
-    <section className="panel section">
+    <section className="panel section" data-route-theme="profile">
       <span className="eyebrow">Login</span>
-      <h1
-        style={{
-          fontFamily: 'Georgia, "Times New Roman", serif',
-          fontSize: "clamp(2.4rem, 5vw, 4rem)",
-          margin: "14px 0 10px"
-        }}
-      >
-        Sign in or create your account
-      </h1>
-      <p className="muted" style={{ lineHeight: 1.75, maxWidth: "62ch" }}>
-        Web commerce now uses the same JWT session model as the rest of {webSurfaceCopy.brandName},
-        so orders, plans, and entitlements stay attached to one shared account.
+      <h1 className="section-title">Sign in or create your account</h1>
+      <p className="lead-copy" style={{ maxWidth: "62ch" }}>
+        Use one {webSurfaceCopy.brandName} account for orders, plans, products, and membership access.
       </p>
 
-      {error ? (
-        <div
-          style={{
-            marginTop: 18,
-            padding: 14,
-            borderRadius: 18,
-            border: "1px solid rgba(169, 68, 66, 0.18)",
-            background: "rgba(169, 68, 66, 0.08)",
-            color: "#8a2c2b"
-          }}
-        >
-          {error}
-        </div>
-      ) : null}
+      {error ? <div className="alert-banner">{error}</div> : null}
 
       <div className="surface-grid" style={{ marginTop: 24 }}>
         <form className="surface-card stack" onSubmit={handleSignIn}>
@@ -97,7 +74,7 @@ export default function LoginPage() {
           <input
             onChange={(event) => setSignInState((current) => ({ ...current, email: event.target.value }))}
             placeholder="Email"
-            style={fieldStyle}
+            className="field-input"
             type="email"
             value={signInState.email}
           />
@@ -106,7 +83,7 @@ export default function LoginPage() {
               setSignInState((current) => ({ ...current, password: event.target.value }))
             }
             placeholder="Password"
-            style={fieldStyle}
+            className="field-input"
             type="password"
             value={signInState.password}
           />
@@ -122,13 +99,13 @@ export default function LoginPage() {
               setRegisterState((current) => ({ ...current, displayName: event.target.value }))
             }
             placeholder="Display name"
-            style={fieldStyle}
+            className="field-input"
             value={registerState.displayName}
           />
           <input
             onChange={(event) => setRegisterState((current) => ({ ...current, email: event.target.value }))}
             placeholder="Email"
-            style={fieldStyle}
+            className="field-input"
             type="email"
             value={registerState.email}
           />
@@ -137,7 +114,7 @@ export default function LoginPage() {
               setRegisterState((current) => ({ ...current, password: event.target.value }))
             }
             placeholder="Password"
-            style={fieldStyle}
+            className="field-input"
             type="password"
             value={registerState.password}
           />
@@ -155,10 +132,3 @@ export default function LoginPage() {
     </section>
   );
 }
-
-const fieldStyle: CSSProperties = {
-  borderRadius: "18px",
-  border: "1px solid rgba(28, 33, 38, 0.12)",
-  background: "rgba(255, 255, 255, 0.82)",
-  padding: "14px 16px"
-};

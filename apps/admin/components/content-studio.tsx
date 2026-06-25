@@ -848,7 +848,7 @@ export function ContentStudio() {
             <p className="eyebrow">Content</p>
             <h1 className="display-title">Admin-only workspace</h1>
             <p className="display-copy">
-              Wellness authoring, workout publishing, and daily content management stay reserved for admins in Phase 2.
+              Wellness authoring, workout publishing, and daily content management are reserved for admins.
             </p>
           </div>
         </section>
@@ -879,9 +879,9 @@ export function ContentStudio() {
       <section className="hero">
         <div className="hero-panel">
           <p className="eyebrow">Content Studio</p>
-          <h1 className="display-title">Manage workouts and wellness content in one place.</h1>
+          <h1 className="display-title">Manage workouts and wellness content.</h1>
           <p className="display-copy">
-            Phase 4 keeps the existing studio intact and adds admin AI drafts for workouts and relaxation, while every generated result still stays editable before you save anything.
+            Create, review, publish, and refine content before it reaches members.
           </p>
           {error ? <p className="error-banner">{error}</p> : null}
         </div>

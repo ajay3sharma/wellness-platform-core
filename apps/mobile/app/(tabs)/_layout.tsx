@@ -1,23 +1,40 @@
 import { Tabs } from "expo-router";
-import { mobileTheme } from "../../src/metadata";
+import { useThemeMode } from "../../src/theme/theme-context";
 
 export default function TabsLayout() {
+  const { theme, mode } = useThemeMode();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: mobileTheme.colors.primary,
-        tabBarInactiveTintColor: "#8A94A6",
+        tabBarActiveTintColor: theme.colors.primaryStrong,
+        tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "rgba(18, 32, 54, 0.08)",
-          height: 62,
+          position: "absolute",
+          left: 14,
+          right: 14,
+          bottom: 12,
+          backgroundColor: mode === "dark" ? theme.colors.surfaceGlass : "rgba(255, 255, 255, 0.92)",
+          borderTopColor: theme.colors.borderSoft,
+          borderTopWidth: 1,
+          borderRadius: 28,
+          height: theme.profile.navHeight + 8,
           paddingBottom: 8,
-          paddingTop: 8
+          paddingTop: 8,
+          shadowColor: "#000000",
+          shadowOpacity: mode === "dark" ? 0.24 : 0.1,
+          shadowRadius: 18,
+          shadowOffset: { width: 4, height: 8 },
+          elevation: 8
+        },
+        tabBarItemStyle: {
+          borderRadius: 22,
+          marginHorizontal: 2
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: "600"
+          fontWeight: "700"
         }
       }}
     >

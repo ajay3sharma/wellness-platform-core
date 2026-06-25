@@ -158,7 +158,7 @@ export default function UsersPage() {
             <p className="eyebrow">Users</p>
             <h1 className="display-title">Approve access and map users to coaches.</h1>
             <p className="display-copy">
-              Admins handle privileged access approvals and coach assignments in Phase 1.
+              Review privileged access, assign coaches, and keep member support organized.
             </p>
             {error ? <p className="error-banner">{error}</p> : null}
           </div>

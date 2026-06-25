@@ -1,15 +1,139 @@
-import { StyleSheet, Text, View } from "react-native";
-import { mobileTheme } from "../metadata";
+import { useEffect, useMemo, useRef } from "react";
+import { Animated, Platform, StyleSheet, Text, View } from "react-native";
+import { getRouteTheme } from "@platform/ui";
+import type { BrandRouteThemeKey } from "@platform/types";
+import { useThemeMode } from "../theme/theme-context";
+
+const displayFontFamily = Platform.select({
+  ios: "System",
+  android: "sans-serif-medium",
+  default: undefined
+});
+
+function useCardStyles(routeTheme: BrandRouteThemeKey = "home") {
+  const { theme, mode } = useThemeMode();
+  const route = getRouteTheme(theme.routeThemes, routeTheme);
+
+  return useMemo(() => {
+    const isDark = mode === "dark";
+
+    return StyleSheet.create({
+      card: {
+        borderRadius: 24,
+        padding: 16,
+        backgroundColor: isDark ? theme.colors.surface : route.background,
+        borderWidth: 1,
+        borderColor: theme.colors.borderSoft,
+        gap: 7,
+        shadowColor: "#000000",
+        shadowOpacity: isDark ? 0.2 : 0.08,
+        shadowRadius: 12,
+        shadowOffset: { width: 4, height: 6 },
+        elevation: 3
+      },
+      meta: {
+        alignSelf: "flex-start",
+        fontSize: 12,
+        color: route.primaryStrong,
+        fontWeight: "800",
+        letterSpacing: 0.5,
+        textTransform: "uppercase"
+      },
+      title: {
+        fontSize: 17,
+        lineHeight: 22,
+        color: theme.colors.textStrong,
+        fontWeight: "700",
+        fontFamily: displayFontFamily
+      },
+      description: {
+        fontSize: 14,
+        lineHeight: 21,
+        color: theme.colors.textMuted
+      },
+      banner: {
+        gap: 8,
+        padding: 20,
+        borderRadius: 30,
+        backgroundColor: isDark ? theme.colors.surfaceRaised : route.background,
+        borderWidth: 1,
+        borderColor: theme.colors.borderSoft,
+        shadowColor: "#000000",
+        shadowOpacity: isDark ? 0.24 : 0.1,
+        shadowRadius: 16,
+        shadowOffset: { width: 5, height: 8 },
+        elevation: 4
+      },
+      bannerGlowLarge: {
+        display: "none"
+      },
+      bannerGlowSmall: {
+        display: "none"
+      },
+      bannerEyebrow: {
+        color: theme.colors.primary,
+        fontSize: 13,
+        fontWeight: "800",
+        letterSpacing: 0.8,
+        textTransform: "uppercase"
+      },
+      bannerTitle: {
+        fontSize: 30,
+        lineHeight: 37,
+        color: theme.colors.textStrong,
+        fontWeight: "300",
+        fontFamily: displayFontFamily,
+        maxWidth: 310
+      },
+      bannerSubtitle: {
+        fontSize: 15,
+        lineHeight: 22,
+        color: theme.colors.textMuted,
+        maxWidth: 320
+      }
+    });
+  }, [mode, route, theme]);
+}
+
+function useBannerEntrance() {
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(12)).current;
+  const { theme } = useThemeMode();
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: theme.motion.baseMs,
+        useNativeDriver: true
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: theme.motion.slowMs,
+        useNativeDriver: true
+      })
+    ]).start();
+  }, [opacity, theme.motion.baseMs, theme.motion.slowMs, translateY]);
+
+  return {
+    opacity,
+    transform: [{ translateY }]
+  };
+}
 
 export function ContentCard({
   title,
   meta,
-  description
+  description,
+  routeTheme = "home"
 }: {
   title: string;
   meta: string;
   description: string;
+  routeTheme?: BrandRouteThemeKey;
 }) {
+  const styles = useCardStyles(routeTheme);
+
   return (
     <View style={styles.card}>
       <Text style={styles.meta}>{meta}</Text>
@@ -21,75 +145,21 @@ export function ContentCard({
 
 export function AccentBanner({
   title,
-  subtitle
+  subtitle,
+  routeTheme = "home"
 }: {
   title: string;
   subtitle: string;
+  routeTheme?: BrandRouteThemeKey;
 }) {
+  const styles = useCardStyles(routeTheme);
+  const animatedStyle = useBannerEntrance();
+
   return (
-    <View style={styles.banner}>
-      <View style={styles.bannerOrb} />
+    <Animated.View style={[styles.banner, animatedStyle]}>
+      <Text style={styles.bannerEyebrow}>Today</Text>
       <Text style={styles.bannerTitle}>{title}</Text>
       <Text style={styles.bannerSubtitle}>{subtitle}</Text>
-    </View>
+    </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 22,
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 1,
-    borderColor: "rgba(18, 32, 54, 0.08)",
-    gap: 6
-  },
-  meta: {
-    fontSize: 12,
-    color: mobileTheme.colors.primary,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 1
-  },
-  title: {
-    fontSize: 16,
-    color: "#122036",
-    fontWeight: "700"
-  },
-  description: {
-    fontSize: 13,
-    color: "#5B6576",
-    lineHeight: 18
-  },
-  banner: {
-    borderRadius: 28,
-    padding: 18,
-    overflow: "hidden",
-    backgroundColor: "#122036",
-    gap: 6
-  },
-  bannerOrb: {
-    position: "absolute",
-    right: -28,
-    top: -28,
-    width: 100,
-    height: 100,
-    borderRadius: 999,
-    backgroundColor: mobileTheme.colors.accent,
-    opacity: 0.22
-  },
-  bannerTitle: {
-    fontSize: 18,
-    lineHeight: 24,
-    color: "#FFFFFF",
-    fontWeight: "700",
-    maxWidth: 260
-  },
-  bannerSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: "rgba(255,255,255,0.8)",
-    maxWidth: 280
-  }
-});
-

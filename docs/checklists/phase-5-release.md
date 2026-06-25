@@ -10,8 +10,9 @@ Use this document as the release-hardening checklist for the current Phase 5 bas
 - Run `corepack pnpm lint`
 - Run `corepack pnpm typecheck`
 - Run `corepack pnpm build`
-- Run `corepack pnpm smoke:setup`
-- Run `corepack pnpm smoke`
+- Run `corepack pnpm smoke:setup` only after Postgres is reachable through `DATABASE_URL`
+- Run `corepack pnpm smoke` after `smoke:setup` succeeds
+- Run `corepack pnpm screenshots` after `smoke:setup` succeeds if you want the current route evidence pack
 - Confirm `GET /api/v1/health` returns `ok`
 - Confirm `GET /api/v1/health/readiness` reports database status and any degraded optional dependencies clearly
 
@@ -26,6 +27,7 @@ Use this document as the release-hardening checklist for the current Phase 5 bas
 - Admin `/content` renders for admins
 - Admin `/commerce` renders for admins
 - Coach sign-in reaches `/dashboard` but does not expose admin-only content or commerce navigation
+- Screenshot pack lands in `test-results/screenshots/` with an `index.json` manifest when requested after seeded fixtures exist
 
 ## Mobile Manual Smoke Walkthrough
 

@@ -31,6 +31,12 @@ export interface ApiConfig {
 }
 
 const activeBrand = getBrandPack(runtimeEnv.activeBrand);
+const mobileWebOrigins = [
+  "http://localhost:8081",
+  "http://127.0.0.1:8081",
+  "http://localhost:8082",
+  "http://127.0.0.1:8082"
+];
 
 function getStringEnv(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
@@ -42,7 +48,8 @@ export const apiConfig: ApiConfig = {
   version: "0.1.0",
   brand: activeBrand,
   apiMetadata: getBrandMetadata("api", runtimeEnv.activeBrand),
-  allowedOrigins: [runtimeEnv.webUrl, runtimeEnv.adminUrl],
+  // Allow the Expo web surface to call the API during local mobile testing and screenshot capture.
+  allowedOrigins: Array.from(new Set([runtimeEnv.webUrl, runtimeEnv.adminUrl, ...mobileWebOrigins])),
   auth: {
     issuer: platformConfig.auth.issuer,
     audience: platformConfig.auth.audience,
