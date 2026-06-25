@@ -5,6 +5,7 @@ const useExternalServers = process.env.PLAYWRIGHT_EXTERNAL_SERVERS === "1";
 
 export default defineConfig({
   testDir: "./smoke",
+  outputDir: process.env.PLAYWRIGHT_ARTIFACT_DIR ?? "test-results/smoke/playwright",
   fullyParallel: false,
   reporter: "list",
   timeout: 60_000,

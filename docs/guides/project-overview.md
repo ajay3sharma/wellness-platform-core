@@ -206,7 +206,7 @@ According to the docs, the bootstrap is considered healthy when:
 - the dev workflow boots the apps
 - `lint`, `typecheck`, and `build` pass
 - `smoke:setup` and `smoke` pass after Postgres is reachable
-- `screenshots` can capture evidence after smoke fixtures are seeded
+- `screenshots` can capture append-only evidence after smoke fixtures are seeded
 - the API health endpoint returns `ok`
 - the readiness endpoint reports dependency state clearly
 
@@ -219,6 +219,7 @@ A healthy platform shows:
 - correct dependency status
 - correct seeded test data
 - correct automated smoke coverage
+- append-only browser evidence folders under `test-results/smoke/runs/` and `test-results/screenshots/runs/`
 
 ## What Still Needs Extra Acceptance
 

@@ -1,16 +1,21 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { createArtifactRun, writeArtifactRegistry } from "./artifact-runs.mjs";
 import { loadWorkspaceEnv } from "./load-workspace-env.mjs";
 
 const root = process.cwd();
 const nodeCommand = process.execPath;
 const playwrightCliPath = path.join(root, "node_modules", "@playwright", "test", "cli.js");
+const artifactRun = await createArtifactRun(root, "smoke", "corepack pnpm smoke");
 
 loadWorkspaceEnv(root);
 
 const env = {
   ...process.env,
   PLAYWRIGHT_EXTERNAL_SERVERS: "1",
+  PLAYWRIGHT_SMOKE_RUN_ID: artifactRun.runId,
+  PLAYWRIGHT_SMOKE_COMMIT_SHA: artifactRun.commitSha,
+  PLAYWRIGHT_ARTIFACT_DIR: path.join(artifactRun.runRoot, "playwright"),
   PATH: [path.join(root, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
     .join(path.delimiter)
@@ -184,8 +189,11 @@ async function runPlaywright() {
 
 const children = [];
 let exitCode = 0;
+let registryStatus = "passed";
 
 try {
+  console.log(`[smoke] Writing this run to ${artifactRun.artifactPath}`);
+
   for (const server of servers) {
     if (await isUrlReady(server.url)) {
       console.log(`[smoke] Reusing existing ${server.name} server at ${server.url}`);
@@ -201,12 +209,18 @@ try {
 } catch (error) {
   console.error(error);
   exitCode = 1;
+  registryStatus = "failed";
 } finally {
   try {
     await Promise.all(children.reverse().map((child) => stopChild(child)));
   } catch (error) {
     console.error(error);
     exitCode = 1;
+    registryStatus = "failed";
+  } finally {
+    await writeArtifactRegistry(artifactRun, registryStatus, {
+      playwrightOutputPath: `${artifactRun.artifactPath}/playwright`
+    });
   }
 }
 

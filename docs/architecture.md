@@ -41,7 +41,7 @@ This repository is the bootstrap foundation for a custom full-stack, white-label
 - Light mode uses `#FAFAFA` canvas, white clay cards, slate text, pastel route backgrounds, and `#FF6A00` focus actions
 - Dark mode uses deep slate canvas, lifted charcoal cards, off-white text, pastel route accents, and subdued clay shadows derived from the light palette
 - Removed visual patterns should stay removed: Apple-blue neutral baseline, flat gray cards, generic SaaS shells, and feature-local color constants
-- Screenshot capture is the intended visual proof set; the latest Base44 reset evidence was regenerated from Postgres-backed smoke fixtures under `test-results/screenshots/`
+- Screenshot capture is the intended visual proof set; evidence is append-only under `test-results/screenshots/runs/<timestamp>-<commit>/` with a root registry at `test-results/screenshots/index.json`
 
 ## Billing
 
@@ -131,7 +131,8 @@ Default local ports:
 - admin: `3001`
 - api: `4000`
 - Expo Metro: `8081`
-- Screenshot artifacts: `test-results/screenshots`
+- Smoke artifacts: `test-results/smoke/runs/<timestamp>-<commit>`
+- Screenshot artifacts: `test-results/screenshots/runs/<timestamp>-<commit>`
 
 ## Current Surfaces
 
@@ -188,6 +189,6 @@ The bootstrap is considered healthy when:
 3. `corepack pnpm dev` can boot web, admin, API, and mobile together
 4. `corepack pnpm lint`, `corepack pnpm typecheck`, and `corepack pnpm build` all pass
 5. `corepack pnpm smoke:setup` and `corepack pnpm smoke` validate the seeded browser and API baseline after Postgres is reachable
-6. `corepack pnpm screenshots` captures current web, admin, and Expo web mobile surfaces into `test-results/screenshots` after seeded fixtures exist
+6. `corepack pnpm screenshots` captures current web, admin, and Expo web mobile surfaces into a new append-only `test-results/screenshots/runs/<timestamp>-<commit>` folder after seeded fixtures exist
 7. the API health endpoint returns `ok` at `/api/v1/health` and readiness reflects dependency state at `/api/v1/health/readiness`
 8. apps resolve brand metadata from shared packages rather than hardcoded strings

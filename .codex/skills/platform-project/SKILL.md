@@ -89,7 +89,7 @@ The detailed breakdown, dependency gates, and milestone acceptance criteria live
 - Phase 4 live AI acceptance still requires a real `GEMINI_API_KEY` for end-to-end provider calls
 - Base44-inspired claymorphism UI reset is implemented in the current working tree across web, admin, and mobile
 - Current UI reset validation passed with `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm smoke:setup`, `corepack pnpm smoke`, and `corepack pnpm screenshots`
-- Screenshot evidence was regenerated from Postgres-backed smoke fixtures under `test-results/screenshots/`
+- Screenshot evidence is preserved from Postgres-backed smoke fixtures under append-only `test-results/screenshots/runs/<timestamp>-<commit>/` folders
 - Phase 5 baseline includes:
   - request tracing
   - readiness
@@ -255,8 +255,8 @@ Phase 1 acceptance has already been validated on the current baseline through th
 - Typecheck: `corepack pnpm typecheck`
 - Build: `corepack pnpm build`
 - Smoke setup: `corepack pnpm smoke:setup` after Postgres is reachable through `DATABASE_URL`
-- Smoke: `corepack pnpm smoke` after `smoke:setup` succeeds
-- Screenshots: `corepack pnpm screenshots` after seeded fixtures exist
+- Smoke: `corepack pnpm smoke` after `smoke:setup` succeeds; output is append-only under `test-results/smoke/runs/`
+- Screenshots: `corepack pnpm screenshots` after seeded fixtures exist; PNG evidence is append-only under `test-results/screenshots/runs/`
 - Brand check: `node scripts/brand-check.mjs`
 - Repo check: `node scripts/repo-check.mjs`
 - Git flow: prefer direct work on `main` for accepted milestones; use `codex/<task-name>` only when work needs temporary isolation

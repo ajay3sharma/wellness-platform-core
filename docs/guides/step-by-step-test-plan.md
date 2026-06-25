@@ -384,9 +384,9 @@ corepack pnpm screenshots
 
 ### What This Does
 
-It runs Playwright screenshot coverage and writes artifacts to:
+It runs Playwright screenshot coverage and writes artifacts to a new append-only run folder:
 
-- `test-results/screenshots/`
+- `test-results/screenshots/runs/<timestamp>-<commit>/`
 - `test-results/screenshots/index.json`
 
 It starts:
@@ -405,6 +405,8 @@ Screenshots give you lightweight visual evidence of:
 - current route rendering
 - obvious regressions
 - what was actually tested on a specific run
+
+Older screenshot run folders are not deleted by the screenshot command. The root `index.json` points to the latest run while preserving previous folders.
 
 ### Best Practice
 
@@ -719,7 +721,7 @@ For each serious test run, keep:
 - results of `lint`, `typecheck`, and `build`
 - result of `smoke:setup`, or the Postgres connectivity error if setup is blocked
 - result of `smoke`, when setup succeeds
-- screenshot artifact folder when used after seeded fixtures exist
+- screenshot artifact folder when used after seeded fixtures exist, usually `test-results/screenshots/runs/<timestamp>-<commit>/`
 - notes on manual web, admin, and mobile results
 - exact failing command and exact error if something breaks
 

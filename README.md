@@ -114,7 +114,11 @@ Invoke-RestMethod `
 - `corepack pnpm screenshots` after `smoke:setup` succeeds
 - `corepack pnpm format`
 
-Screenshot artifacts are written to `test-results/screenshots/` with an `index.json` manifest after each successful screenshot run.
+Browser-test artifacts are append-only and ignored by Git:
+
+- `corepack pnpm smoke` writes Playwright output to `test-results/smoke/runs/<timestamp>-<commit>/`
+- `corepack pnpm screenshots` writes PNGs to `test-results/screenshots/runs/<timestamp>-<commit>/`
+- root registries at `test-results/smoke/index.json` and `test-results/screenshots/index.json` point to the latest run without deleting older runs
 
 Smoke fixture accounts after `corepack pnpm smoke:setup`:
 
@@ -146,7 +150,7 @@ Smoke fixture accounts after `corepack pnpm smoke:setup`:
 - Phase 3: implemented in code and repo-validated; live provider acceptance is parked as a pending follow-up
 - Phase 4: implemented and repo-validated; live Gemini acceptance pending `GEMINI_API_KEY`
 - Phase 5: implemented and repo-validated for request tracing, readiness, logs, smoke coverage, CI smoke setup, and release checklists
-- UI reset: Base44-inspired claymorphism visual baseline implemented and screenshot-validated under `test-results/screenshots/`
+- UI reset: Base44-inspired claymorphism visual baseline implemented and screenshot-validated under append-only `test-results/screenshots/runs/`
 
 ## Git Workflow
 

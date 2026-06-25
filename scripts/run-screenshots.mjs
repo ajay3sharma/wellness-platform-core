@@ -1,9 +1,11 @@
 import path from "node:path";
 import { spawn } from "node:child_process";
+import { createArtifactRun, writeArtifactRegistry } from "./artifact-runs.mjs";
 import { loadWorkspaceEnv } from "./load-workspace-env.mjs";
 
 const root = process.cwd();
 const playwrightCliPath = path.join(root, "node_modules", "@playwright", "test", "cli.js");
+const artifactRun = await createArtifactRun(root, "screenshots", "corepack pnpm screenshots");
 
 loadWorkspaceEnv(root);
 
@@ -12,7 +14,10 @@ const env = {
   NODE_ENV: "production",
   EXPO_WEB_PORT: process.env.EXPO_WEB_PORT ?? "8082",
   PLAYWRIGHT_SCREENSHOT_MODE: "1",
-  PLAYWRIGHT_SCREENSHOT_DIR: path.join(root, "test-results", "screenshots"),
+  PLAYWRIGHT_SCREENSHOT_RUN_ID: artifactRun.runId,
+  PLAYWRIGHT_SCREENSHOT_COMMIT_SHA: artifactRun.commitSha,
+  PLAYWRIGHT_SCREENSHOT_DIR: artifactRun.runRoot,
+  PLAYWRIGHT_ARTIFACT_DIR: path.join(artifactRun.runRoot, "playwright"),
   SCREENSHOT_MOBILE_URL: process.env.SCREENSHOT_MOBILE_URL ?? "http://localhost:8082",
   PATH: [path.join(root, "node_modules", ".bin"), process.env.PATH]
     .filter(Boolean)
@@ -223,8 +228,11 @@ async function runPlaywright() {
 
 const children = [];
 let exitCode = 0;
+let registryStatus = "passed";
 
 try {
+  console.log(`[screenshots] Writing this run to ${artifactRun.artifactPath}`);
+
   for (const args of oneOffCommands) {
     await runCommand(nodeCommand, args);
   }
@@ -244,12 +252,18 @@ try {
 } catch (error) {
   console.error(error);
   exitCode = 1;
+  registryStatus = "failed";
 } finally {
   try {
     await Promise.all(children.reverse().map((child) => stopChild(child)));
   } catch (error) {
     console.error(error);
     exitCode = 1;
+    registryStatus = "failed";
+  } finally {
+    await writeArtifactRegistry(artifactRun, registryStatus, {
+      runManifestPath: `${artifactRun.artifactPath}/index.json`
+    });
   }
 }
 

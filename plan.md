@@ -331,7 +331,7 @@ The active UI baseline has been reset from the Apple-neutral pass to a Base44-in
 - Keep dark mode as a derived clay companion with deep slate canvas, charcoal cards, pastel accents, and readable off-white text
 - Do not reintroduce Apple-blue neutral styling as the active baseline
 - Current validation after this reset passed: `corepack pnpm typecheck`, `corepack pnpm lint`, `corepack pnpm build`, `corepack pnpm smoke:setup`, `corepack pnpm smoke`, and `corepack pnpm screenshots`
-- Visual screenshot evidence was regenerated under `test-results/screenshots/` with the Base44 claymorphism baseline
+- Visual screenshot evidence is preserved under append-only `test-results/screenshots/runs/<timestamp>-<commit>/` folders with a root registry at `test-results/screenshots/index.json`
 
 ## Pending Follow-Ups
 
@@ -364,4 +364,4 @@ Avoid parallel edits in the same app or domain module unless the write scopes ar
 
 ## Current Next Step
 
-The canonical implementation phases are now repo-validated through **Phase 5**. The current UI baseline is the Base44 claymorphism reset and has screenshot evidence under `test-results/screenshots/`. Remaining tracked follow-ups are **Phase 3 live billing validation** and **live Gemini acceptance**, each to be resumed explicitly when needed.
+The canonical implementation phases are now repo-validated through **Phase 5**. The current UI baseline is the Base44 claymorphism reset and has append-only screenshot evidence under `test-results/screenshots/runs/`. Remaining tracked follow-ups are **Phase 3 live billing validation** and **live Gemini acceptance**, each to be resumed explicitly when needed.

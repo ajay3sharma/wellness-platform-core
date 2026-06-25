@@ -37,8 +37,10 @@ async function collectScreenshots(directory: string) {
 
 async function writeManifest() {
   const manifest = {
+    runId: process.env.PLAYWRIGHT_SCREENSHOT_RUN_ID ?? null,
+    commitSha: process.env.PLAYWRIGHT_SCREENSHOT_COMMIT_SHA ?? null,
     generatedAt: new Date().toISOString(),
-    root: "test-results/screenshots",
+    root: path.relative(process.cwd(), screenshotRoot).replaceAll("\\", "/"),
     screenshots: await collectScreenshots(screenshotRoot)
   };
 
